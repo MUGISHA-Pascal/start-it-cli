@@ -4,16 +4,16 @@ A prompt-based CLI tool to scaffold projects for various frameworks and language
 
 ## Features
 
-- 🚀 Interactive prompt-based project setup
-- 📦 Support for multiple frameworks:
+- Interactive prompt-based project setup
+- Support for multiple frameworks:
   - Go
   - Flutter
   - React Native
   - Spring Boot
   - Node.js
   - Python
-- 🎨 Beautiful CLI interface with colors and spinners
-- ⚡ Fast project scaffolding
+- Beautiful CLI interface with colors and spinners
+- Fast project scaffolding
 
 ## Installation
 
@@ -60,7 +60,7 @@ $ start-it
   Web API
   Microservice
 
-✓ Project created successfully!
+Project created successfully!
 ```
 
 ## Supported Frameworks

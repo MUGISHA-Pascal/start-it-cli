@@ -25,7 +25,7 @@ $ start-it
 ? Project name: my-go-app
 ? Select Go template: Web API
 
-✓ Project created successfully!
+Project created successfully!
 
 Next steps:
   cd my-go-app
@@ -48,7 +48,7 @@ $ start-it
 ? Project name: my-flutter-app
 ? Select Flutter template: Mobile App
 
-✓ Project created successfully!
+Project created successfully!
 
 Next steps:
   cd my-flutter-app
@@ -71,7 +71,7 @@ $ start-it
 ? Project name: my-rn-app
 ? Select React Native template: Expo
 
-✓ Project created successfully!
+Project created successfully!
 
 Next steps:
   cd my-rn-app
@@ -94,7 +94,7 @@ $ start-it
 ? Project name: my-api
 ? Select Spring Boot template: REST API
 
-✓ Project created successfully!
+Project created successfully!
 
 Next steps:
   cd my-api
@@ -117,7 +117,7 @@ $ start-it
 ? Project name: my-express-api
 ? Select Node.js template: Express API
 
-✓ Project created successfully!
+Project created successfully!
 
 Next steps:
   cd my-express-api
@@ -140,7 +140,7 @@ $ start-it
 ? Project name: my-nextjs-app
 ? Select Node.js template: Next.js
 
-✓ Project created successfully!
+Project created successfully!
 
 Next steps:
   cd my-nextjs-app
@@ -163,7 +163,7 @@ $ start-it
 ? Project name: my-fastapi-service
 ? Select Python template: FastAPI
 
-✓ Project created successfully!
+Project created successfully!
 
 Next steps:
   cd my-fastapi-service
@@ -188,7 +188,7 @@ $ start-it
 ? Project name: my-django-app
 ? Select Python template: Django
 
-✓ Project created successfully!
+Project created successfully!
 
 Next steps:
   cd my-django-app
