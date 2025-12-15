@@ -1,0 +1,161 @@
+#!/usr/bin/env node
+
+import chalk from "chalk";
+import inquirer from "inquirer";
+import { ProjectGenerator } from "./generator";
+import { ProjectConfig } from "./types";
+
+const FRAMEWORKS = [
+  "Go",
+  "Flutter",
+  "React Native",
+  "Spring Boot",
+  "Node.js",
+  "Python",
+];
+
+async function main() {
+  console.log(chalk.bold.cyan("\n🚀 Welcome to start-it!\n"));
+  console.log(chalk.gray("Create a new project with ease.\n"));
+
+  try {
+    const answers = await inquirer.prompt([
+      {
+        type: "list",
+        name: "framework",
+        message: "What type of project would you like to create?",
+        choices: FRAMEWORKS,
+      },
+      {
+        type: "input",
+        name: "projectName",
+        message: "Project name:",
+        default: "my-app",
+        validate: (input) => {
+          if (!input.trim()) {
+            return "Project name cannot be empty";
+          }
+          if (!/^[a-zA-Z0-9_-]+$/.test(input)) {
+            return "Project name can only contain letters, numbers, hyphens, and underscores";
+          }
+          return true;
+        },
+      },
+    ]);
+
+    const config: ProjectConfig = {
+      framework: answers.framework,
+      projectName: answers.projectName,
+      projectPath: process.cwd(),
+    };
+
+    // Get framework-specific options
+    const frameworkOptions = await getFrameworkOptions(config.framework);
+    config.options = frameworkOptions;
+
+    const generator = new ProjectGenerator(config);
+    await generator.generate();
+
+    console.log(
+      chalk.bold.green(
+        `\n✓ Project "${config.projectName}" created successfully!\n`
+      )
+    );
+    console.log(chalk.cyan(`Next steps:`));
+    console.log(chalk.gray(`  cd ${config.projectName}`));
+    console.log(
+      chalk.gray(`  Follow the README.md for further instructions\n`)
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(chalk.bold.red(`\n✗ Error: ${error.message}\n`));
+    } else {
+      console.error(chalk.bold.red("\n✗ An unexpected error occurred\n"));
+    }
+    process.exit(1);
+  }
+}
+
+async function getFrameworkOptions(
+  framework: string
+): Promise<Record<string, string>> {
+  const options: Record<string, string> = {};
+
+  switch (framework) {
+    case "Go":
+      const goTemplate = await inquirer.prompt([
+        {
+          type: "list",
+          name: "template",
+          message: "Select Go template:",
+          choices: ["Basic CLI", "Web API", "Microservice"],
+        },
+      ]);
+      options.template = goTemplate.template;
+      break;
+
+    case "Flutter":
+      const flutterTemplate = await inquirer.prompt([
+        {
+          type: "list",
+          name: "template",
+          message: "Select Flutter template:",
+          choices: ["Mobile App", "Web App", "Desktop App"],
+        },
+      ]);
+      options.template = flutterTemplate.template;
+      break;
+
+    case "React Native":
+      const rnTemplate = await inquirer.prompt([
+        {
+          type: "list",
+          name: "template",
+          message: "Select React Native template:",
+          choices: ["Expo", "Bare React Native"],
+        },
+      ]);
+      options.template = rnTemplate.template;
+      break;
+
+    case "Spring Boot":
+      const sbTemplate = await inquirer.prompt([
+        {
+          type: "list",
+          name: "template",
+          message: "Select Spring Boot template:",
+          choices: ["REST API", "Web Application", "Microservice"],
+        },
+      ]);
+      options.template = sbTemplate.template;
+      break;
+
+    case "Node.js":
+      const nodeTemplate = await inquirer.prompt([
+        {
+          type: "list",
+          name: "template",
+          message: "Select Node.js template:",
+          choices: ["Express API", "Next.js", "TypeScript Project"],
+        },
+      ]);
+      options.template = nodeTemplate.template;
+      break;
+
+    case "Python":
+      const pyTemplate = await inquirer.prompt([
+        {
+          type: "list",
+          name: "template",
+          message: "Select Python template:",
+          choices: ["Django", "Flask", "FastAPI"],
+        },
+      ]);
+      options.template = pyTemplate.template;
+      break;
+  }
+
+  return options;
+}
+
+main();
