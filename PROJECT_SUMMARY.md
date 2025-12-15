@@ -1,8 +1,8 @@
-# start-it - Project Summary
+# start-it-cli - Project Summary
 
 ## Overview
 
-**start-it** is a comprehensive npm package that provides a prompt-based CLI tool for scaffolding projects across multiple frameworks and languages. It simplifies project initialization by offering interactive prompts and pre-configured templates.
+**start-it-cli** is a comprehensive npm package that provides a prompt-based CLI tool for scaffolding projects across multiple frameworks and languages. It simplifies project initialization by offering interactive prompts and pre-configured templates.
 
 ## Project Status
 

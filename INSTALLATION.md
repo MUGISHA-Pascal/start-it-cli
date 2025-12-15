@@ -9,16 +9,16 @@
 
 ### 1. Global Installation (Recommended)
 
-Install start-it globally to use it from anywhere:
+Install start-it-cli globally to use it from anywhere:
 
 ```bash
-npm install -g start-it
+npm install -g start-it-cli
 ```
 
 Then use it from any directory:
 
 ```bash
-start-it
+start-it-cli
 ```
 
 ### 2. Local Installation
@@ -26,13 +26,13 @@ start-it
 Install in your project directory:
 
 ```bash
-npm install start-it
+npm install start-it-cli
 ```
 
 Then use it with npx:
 
 ```bash
-npx start-it
+npx start-it-cli
 ```
 
 ### 3. Development Installation
@@ -50,7 +50,7 @@ npm link
 Then use it as:
 
 ```bash
-start-it
+start-it-cli
 ```
 
 ## Verification
@@ -58,13 +58,13 @@ start-it
 To verify the installation was successful:
 
 ```bash
-start-it --version
+start-it-cli --version
 ```
 
 Or simply run:
 
 ```bash
-start-it
+start-it-cli
 ```
 
 You should see the welcome message and be prompted to select a framework.
@@ -74,26 +74,26 @@ You should see the welcome message and be prompted to select a framework.
 ### Global Installation
 
 ```bash
-npm uninstall -g start-it
+npm uninstall -g start-it-cli
 ```
 
 ### Local Installation
 
 ```bash
-npm uninstall start-it
+npm uninstall start-it-cli
 ```
 
 ### Development Installation
 
 ```bash
-npm unlink start-it
+npm unlink start-it-cli
 ```
 
 ## Troubleshooting
 
 ### Command not found
 
-If you get "command not found: start-it" after global installation:
+If you get "command not found: start-it-cli" after global installation:
 
 1. Check npm's global bin directory:
 
@@ -118,7 +118,7 @@ export PATH="$(npm config get prefix)/bin:$PATH"
 If you get permission errors during global installation:
 
 ```bash
-sudo npm install -g start-it
+sudo npm install -g start-it-cli
 ```
 
 Or configure npm to avoid using sudo:
@@ -169,7 +169,7 @@ npm run build
 After installation, run:
 
 ```bash
-start-it
+start-it-cli
 ```
 
 And follow the interactive prompts to create your first project!

@@ -1,18 +1,18 @@
-# start-it Examples
+# start-it-cli Examples
 
 ## Installation
 
 ### Global Installation
 
 ```bash
-npm install -g start-it
+npm install -g start-it-cli
 ```
 
 ### Local Installation
 
 ```bash
-npm install start-it
-npx start-it
+npm install start-it-cli
+npx start-it-cli
 ```
 
 ## Usage Examples
@@ -20,7 +20,7 @@ npx start-it
 ### Creating a Go Project
 
 ```bash
-$ start-it
+$ start-it-cli
 ? What type of project would you like to create? Go
 ? Project name: my-go-app
 ? Select Go template: Web API

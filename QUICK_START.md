@@ -1,17 +1,17 @@
 # Quick Start Guide
 
-Get up and running with start-it in 2 minutes!
+Get up and running with start-it-cli in 2 minutes!
 
 ## Installation
 
 ```bash
-npm install -g start-it
+npm install -g start-it-cli
 ```
 
 ## Create Your First Project
 
 ```bash
-start-it
+start-it-cli
 ```
 
 Then answer the prompts:

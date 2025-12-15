@@ -18,13 +18,13 @@ A prompt-based CLI tool to scaffold projects for various frameworks and language
 ## Installation
 
 ```bash
-npm install -g start-it
+npm install -g start-it-cli
 ```
 
 Or use with `npx`:
 
 ```bash
-npx start-it
+npx start-it-cli
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ npx start-it
 Simply run the command:
 
 ```bash
-start-it
+start-it-cli
 ```
 
 Then follow the interactive prompts to:
@@ -45,7 +45,7 @@ Then follow the interactive prompts to:
 ## Example
 
 ```bash
-$ start-it
+$ start-it-cli
 ? What type of project would you like to create? (Use arrow keys)
 ❯ Go
   Flutter
