@@ -31,7 +31,7 @@ async function main() {
         name: "projectName",
         message: "Project name:",
         default: "my-app",
-        validate: (input) => {
+        validate: (input: string) => {
           if (!input.trim()) {
             return "Project name cannot be empty";
           }
