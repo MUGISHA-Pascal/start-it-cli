@@ -1,10 +1,10 @@
 {
   "name": "start-it-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A prompt-based CLI tool to scaffold projects for Go, Flutter, React Native, Spring Boot, and more",
   "main": "dist/index.js",
   "bin": {
-    "start-it": "dist/cli.js"
+    "start-it-cli": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
