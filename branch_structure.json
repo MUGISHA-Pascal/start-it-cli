@@ -1,0 +1,21 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "add-license",
+    "main",
+    "origin",
+    "pascal-dev"
+  ],
+  "parent": {
+    "add-license": "main",
+    "main": null,
+    "origin": "main",
+    "pascal-dev": "main"
+  },
+  "order": [
+    "main",
+    "add-license",
+    "origin",
+    "pascal-dev"
+  ]
+}
