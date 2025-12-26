@@ -7,9 +7,9 @@
     "start-it-cli": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "ts-node src/cli.ts",
-    "start": "node dist/cli.js",
+    "build": "node init && tsc",
+    "dev": "node init && ts-node src/cli.ts",
+    "start": "node init && node dist/cli.js",
     "test": "jest",
     "prepublishOnly": "npm run build"
   },
