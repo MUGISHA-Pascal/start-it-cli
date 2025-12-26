@@ -3,6 +3,7 @@
 import chalk from "chalk";
 import inquirer from "inquirer";
 import { ProjectGenerator } from "./generator";
+import { AIProjectGenerator } from "./ai/generator";
 import { ProjectConfig } from "./types";
 
 const FRAMEWORKS = [
@@ -14,6 +15,11 @@ const FRAMEWORKS = [
   "Python",
 ];
 
+const GENERATION_TYPES = [
+  { name: "Traditional (Template-based)", value: "traditional" },
+  { name: "AI-Powered (Smart recommendations)", value: "ai" },
+];
+
 async function main() {
   console.log(chalk.bold.cyan("\n🚀 Welcome to start-it!\n"));
   console.log(chalk.gray("Create a new project with ease.\n"));
@@ -22,9 +28,16 @@ async function main() {
     const answers = await inquirer.prompt([
       {
         type: "list",
+        name: "generationType",
+        message: "Choose project generation method:",
+        choices: GENERATION_TYPES,
+      },
+      {
+        type: "list",
         name: "framework",
         message: "What type of project would you like to create?",
         choices: FRAMEWORKS,
+        when: (answers) => answers.generationType === "traditional",
       },
       {
         type: "input",
@@ -49,12 +62,73 @@ async function main() {
       projectPath: process.cwd(),
     };
 
-    // Get framework-specific options
-    const frameworkOptions = await getFrameworkOptions(config.framework);
-    config.options = frameworkOptions;
+    if (answers.generationType === "traditional") {
+      // Get framework-specific options
+      const frameworkOptions = await getFrameworkOptions(config.framework);
+      config.options = frameworkOptions;
 
-    const generator = new ProjectGenerator(config);
-    await generator.generate();
+      const generator = new ProjectGenerator(config);
+      await generator.generate();
+    } else {
+      // AI-powered generation
+      const aiAnswers = await inquirer.prompt([
+        {
+          type: "input",
+          name: "description",
+          message: "Describe your project:",
+          validate: (input: string) => {
+            if (!input.trim()) {
+              return "Project description cannot be empty";
+            }
+            return true;
+          },
+        },
+        {
+          type: "list",
+          name: "scale",
+          message: "Project scale:",
+          choices: ["small", "medium", "large"],
+        },
+        {
+          type: "input",
+          name: "deployment",
+          message: "Deployment target (optional):",
+        },
+        {
+          type: "checkbox",
+          name: "features",
+          message: "Select features you need:",
+          choices: [
+            "authentication",
+            "database",
+            "api",
+            "frontend",
+            "backend",
+            "testing",
+            "logging",
+            "monitoring",
+            "cache",
+            "queue",
+            "websocket",
+            "file-upload",
+            "email",
+            "payment",
+            "search",
+          ],
+        },
+      ]);
+
+      const aiGenerator = new AIProjectGenerator();
+      await aiGenerator.generate({
+        projectName: answers.projectName,
+        projectPath: process.cwd(),
+        description: aiAnswers.description,
+        framework: undefined,
+        scale: aiAnswers.scale,
+        deployment: aiAnswers.deployment,
+        features: aiAnswers.features,
+      });
+    }
 
     console.log(
       chalk.bold.green(
