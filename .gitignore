@@ -1,10 +1,9 @@
 node_modules/
 dist/
-.env
-.env.local
 *.log
 .DS_Store
 coverage/
 .vscode/
 .idea/
 .npmrc
+config.bat
