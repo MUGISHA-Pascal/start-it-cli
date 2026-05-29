@@ -551,6 +551,10 @@ As an expert software architect and full-stack developer, analyze this project r
 
 Project Description: ${request.description}
 Preferred Framework: ${request.framework || "Auto-detect"}
+Architecture Style: ${request.architecture || "Auto-detect"}
+Primary Database: ${request.database || "None"}
+Preferred Frontend Stack: ${request.frontendStack || "None"}
+DevOps & CI/CD Tools: ${request.devops?.join(", ") || "None"}
 Key Features: ${request.features.join(", ")}
 Project Scale: ${request.scale}
 Deployment Target: ${request.deployment || "Not specified"}

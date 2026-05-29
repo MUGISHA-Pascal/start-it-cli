@@ -62,3 +62,60 @@ You are assisting with development on this codebase. To keep token consumption m
   const specific = frameworkRules[framework] || "";
   return `# cursorrules for ${framework} - ${template}\n${genericRules}\n${specific}`.trim();
 }
+
+/**
+ * Generates docs/AGENTS.md for newly scaffolded projects.
+ */
+export function getDocsAgents(framework: string, template: string): string {
+  return `
+# 🤖 AI Agent Project Guidelines (AGENTS.md)
+
+Welcome, AI Agent! This guide outlines the conventions, design paradigms, and security boundaries of this **${framework} (${template})** project.
+
+## 🧭 Architecture & Naming Conventions
+- Always adapt newly implemented modules to follow the directory paradigms currently in place.
+- Keep filenames clean, consistent, and correctly cased (e.g., camelCase for TypeScript, snake_case for Python, lower_case/camelCase for Go/Dart).
+
+## 🚀 Key Rules of Engagement
+1. **Never Hallucinate Libraries**: Use ONLY the packages already declared in configuration files (like \`package.json\`, \`requirements.txt\`, or \`go.mod\`) unless specifically instructed to add them.
+2. **Context Window Friendly**: Output concise, precise changes. Never print complete classes or files if only two lines need to be changed.
+3. **Robust Coding Standards**: Implement thorough validations, proper boundary checks, and full error-handling (never write empty catch blocks).
+`.trim();
+}
+
+/**
+ * Generates docs/instructions.md for newly scaffolded projects.
+ */
+export function getDocsInstructions(framework: string, template: string): string {
+  return `
+# 📖 Developer Setup & Playbook (instructions.md)
+
+Welcome to your newly scaffolded **${framework}** project! This playbook contains onboarding instructions for configuring, developing, building, and verifying this project.
+
+## 🛠️ Step-by-Step Local Setup
+
+### 1. Installation
+Install all dependencies needed to execute the application:
+- **Node.js**: Run \\\`npm install\\\`
+- **Go**: Run \\\`go mod download\\\`
+- **Python**: Run \\\`pip install -r requirements.txt\\\`
+- **Flutter**: Run \\\`flutter pub get\\\`
+
+### 2. Development Execution
+Run the workspace locally using hot-reloading:
+- **Node.js**: Run \\\`npm run dev\\\`
+- **Go**: Run \\\`go run main.go\\\`
+- **Python**: Run \\\`python main.py\\\` or \\\`fastapi dev\\\`
+- **Flutter**: Run \\\`flutter run\\\`
+
+### 3. Testing
+Ensure code modifications compile and pass the test suite:
+- **Node.js**: Run \\\`npm test\\\`
+- **Go**: Run \\\`go test ./...\\\`
+- **Python**: Run \\\`pytest\\\`
+
+## 🧩 Standards & Extensions
+- Keep database migrations separate from application logic.
+- Secure environment secrets inside a private \\\`.env\\\` file (never commit \\\`.env\\\` to Git).
+`.trim();
+}

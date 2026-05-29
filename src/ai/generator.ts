@@ -6,7 +6,7 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { getAgentRules } from "../utils/agentRules";
+import { getAgentRules, getDocsAgents, getDocsInstructions } from "../utils/agentRules";
 
 export class AIProjectGenerator {
   private aiProvider: SmartAIProvider;
@@ -45,6 +45,18 @@ export class AIProjectGenerator {
       // Add agentic AI guidelines for token efficiency
       const rulesContent = getAgentRules(recommendation.framework, recommendation.template);
       await fs.writeFile(path.join(projectDir, ".cursorrules"), rulesContent);
+
+      // Create docs directory and write default instruction files
+      const docsDir = path.join(projectDir, "docs");
+      await fs.ensureDir(docsDir);
+      await fs.writeFile(
+        path.join(docsDir, "AGENTS.md"),
+        getDocsAgents(recommendation.framework, recommendation.template)
+      );
+      await fs.writeFile(
+        path.join(docsDir, "instructions.md"),
+        getDocsInstructions(recommendation.framework, recommendation.template)
+      );
 
       spinner.succeed("Project created successfully!");
 
