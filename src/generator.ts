@@ -4,6 +4,7 @@ import chalk from "chalk";
 import ora from "ora";
 import { ProjectConfig } from "./types";
 import { getTemplate } from "./templates";
+import { getAgentRules } from "./utils/agentRules";
 
 export class ProjectGenerator {
   private config: ProjectConfig;
@@ -45,6 +46,13 @@ export class ProjectGenerator {
           await fs.chmod(filePath, 0o755);
         }
       }
+
+      // Add agentic AI guidelines for token efficiency
+      const rulesContent = getAgentRules(
+        this.config.framework,
+        this.config.options?.template || ""
+      );
+      await fs.writeFile(path.join(projectPath, ".cursorrules"), rulesContent);
 
       spinner.succeed("Project structure created");
     } catch (error) {
