@@ -7,3 +7,4 @@ coverage/
 .idea/
 .npmrc
 config.bat
+.kiro

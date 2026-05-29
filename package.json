@@ -22,7 +22,7 @@
     "react-native",
     "spring-boot"
   ],
-  "author": "",
+  "authors": ["Mugisha Pascal", "Mugisha Prosper"],
   "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.2",
