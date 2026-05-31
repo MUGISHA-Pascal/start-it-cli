@@ -192,9 +192,14 @@ const DSA_INPUT_MODE_CHOICES: { name: string; value: DsaInputMode }[] = [
   { name: "Function-first runner", value: "function-first" },
 ];
 
-const DSA_TESTING_CHOICES: { name: string; value: DsaTestingOption }[] = [
+const DSA_CPP_TESTING_CHOICES: { name: string; value: DsaTestingOption }[] = [
   { name: "Manual sample cases", value: "manual-cases" },
   { name: "CTest", value: "ctest" },
+];
+
+const DSA_PYTHON_TESTING_CHOICES: { name: string; value: DsaTestingOption }[] = [
+  { name: "Manual sample cases", value: "manual-cases" },
+  { name: "Pytest", value: "pytest" },
 ];
 
 async function main() {
@@ -793,9 +798,12 @@ async function promptForDsaOptions(
   projectName: string,
   stack: DsaStack
 ): Promise<Pick<DsaGenerationConfig, "appName" | "track" | "inputMode" | "testing">> {
-  if (stack !== "dsa-cpp") {
+  if (stack !== "dsa-cpp" && stack !== "dsa-python") {
     throw new Error(`Unsupported dsa stack "${stack}"`);
   }
+
+  const testingChoices =
+    stack === "dsa-python" ? DSA_PYTHON_TESTING_CHOICES : DSA_CPP_TESTING_CHOICES;
 
   return inquirer.prompt([
     {
@@ -829,9 +837,13 @@ async function promptForDsaOptions(
       type: "list",
       name: "testing",
       message: "Choose the verification setup:",
-      choices: DSA_TESTING_CHOICES,
+      choices: testingChoices,
       default: (answers: { track: DsaTrackOption }) =>
-        answers.track === "interview-prep" ? "ctest" : "manual-cases",
+        answers.track === "interview-prep"
+          ? stack === "dsa-python"
+            ? "pytest"
+            : "ctest"
+          : "manual-cases",
     },
   ]);
 }
@@ -842,6 +854,8 @@ function getDsaTemplateName(
   switch (stack) {
     case "dsa-cpp":
       return "C++ DSA Workspace";
+    case "dsa-python":
+      return "Python DSA Workspace";
   }
 }
 
@@ -862,6 +876,8 @@ function getNextSteps(stack: SupportedStack): string[] {
         "cmake -S . -B build",
         "cmake --build build",
       ];
+    case "dsa-python":
+      return ["python main.py < examples/sample_input.txt"];
     case "react-vite":
       return ["npm install", "npm run dev"];
     case "nextjs":
