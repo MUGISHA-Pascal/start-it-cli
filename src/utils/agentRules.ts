@@ -1,12 +1,9 @@
 import { ProjectConfig, TemplateOptions } from "../types";
 import {
-  composeAiMlStackBlock,
-  composeAppTypeBlock,
-  composeBackendStackBlock,
+  composeConstitutionRules,
   composeCursorPrinciples,
-  composeDsaStackBlock,
-  composeFrontendStackBlock,
   composeProfileBlock,
+  composeSelectedChoiceLines,
   composeSharedConstitution,
 } from "../agent/composer";
 
@@ -81,11 +78,11 @@ function buildAgentsGuide(config: ProjectConfig): string {
     "",
     "## Stack-Specific Rules",
     "",
-    ...buildStackRules(config),
+    ...composeConstitutionRules(config),
     "",
     "## Selected Project Choices",
     "",
-    ...buildSelectedChoiceLines(config),
+    ...composeSelectedChoiceLines(config),
   ];
 
   return sections.join("\n").trim();
@@ -120,132 +117,12 @@ function buildInstructionsGuide(config: ProjectConfig): string {
     ...toBullets(getChangeProtocol(config)),
   ];
 
-  const selectedChoices = buildSelectedChoiceLines(config);
+  const selectedChoices = composeSelectedChoiceLines(config);
   if (selectedChoices.length > 0) {
     sections.push("", "## Selected Scaffold Choices", "", ...toBullets(selectedChoices));
   }
 
   return sections.join("\n").trim();
-}
-
-function buildStackRules(config: ProjectConfig): string[] {
-  const rules: string[] = [];
-
-  const appTypeLines = composeAppTypeBlock(config);
-  if (appTypeLines.length > 0) {
-    rules.push(...appTypeLines);
-  }
-
-  const backendStackLines = composeBackendStackBlock(config);
-  if (backendStackLines.length > 0) {
-    rules.push("", ...backendStackLines);
-  }
-
-  const frontendStackLines = composeFrontendStackBlock(config);
-  if (frontendStackLines.length > 0) {
-    rules.push("", ...frontendStackLines);
-  }
-
-  const aiMlStackLines = composeAiMlStackBlock(config);
-  if (aiMlStackLines.length > 0) {
-    rules.push("", ...aiMlStackLines);
-  }
-
-  const dsaStackLines = composeDsaStackBlock(config);
-  if (dsaStackLines.length > 0) {
-    rules.push("", ...dsaStackLines);
-  }
-
-  switch (config.stack) {
-    case "node-ts-express":
-    case "nestjs":
-    case "python-fastapi":
-      break;
-    case "python-fastapi-serving":
-    case "r-analytics":
-    case "cpp-inference":
-      break;
-    case "react-vite":
-    case "nextjs":
-    case "dsa-cpp":
-    case "dsa-python":
-      break;
-  }
-
-  return rules;
-}
-
-function buildSelectedChoiceLines(config: ProjectConfig): string[] {
-  const lines = [
-    `Project profile: ${config.projectProfile}`,
-    `App type: ${config.appType}`,
-    `Stack: ${config.stack}`,
-  ];
-  const options = config.options;
-
-  if (!options) {
-    return lines;
-  }
-
-  if (options.databases && options.databases.length > 0) {
-    lines.push(`Databases: ${options.databases.join(", ")}`);
-  }
-  if (options.securityPreset) {
-    lines.push(`Security preset: ${options.securityPreset}`);
-  }
-  if (options.logging) {
-    lines.push(`Logging: ${options.logging}`);
-  }
-  if (options.monitoring) {
-    lines.push(`Monitoring: ${options.monitoring}`);
-  }
-  if (options.testing) {
-    lines.push(`Testing: ${options.testing}`);
-  }
-  if (options.routing && options.routing !== "none") {
-    lines.push(`Routing: ${options.routing}`);
-  }
-  if (options.nextRouter) {
-    lines.push(`Next router: ${options.nextRouter}`);
-  }
-  if (options.styling) {
-    lines.push(`Styling: ${options.styling}`);
-  }
-  if (options.uiAddon && options.uiAddon !== "none") {
-    lines.push(`UI add-on: ${options.uiAddon}`);
-  }
-  if (options.stateManagement && options.stateManagement !== "none") {
-    lines.push(`State management: ${options.stateManagement}`);
-  }
-  if (options.dataFetching) {
-    lines.push(`Data fetching: ${options.dataFetching}`);
-  }
-  if (options.servingMode) {
-    lines.push(`Serving mode: ${options.servingMode}`);
-  }
-  if (options.executionMode) {
-    lines.push(`Execution mode: ${options.executionMode}`);
-  }
-  if (options.runtimeMode) {
-    lines.push(`Runtime mode: ${options.runtimeMode}`);
-  }
-  if (options.modelPackaging) {
-    lines.push(`Model packaging: ${options.modelPackaging}`);
-  }
-  if (options.tracking) {
-    lines.push(`Tracking: ${options.tracking}`);
-  }
-  if (options.validation) {
-    lines.push(`Validation: ${options.validation}`);
-  }
-  if (options.track) {
-    lines.push(`DSA track: ${options.track}`);
-  }
-  if (options.inputMode) {
-    lines.push(`Input mode: ${options.inputMode}`);
-  }
-
-  return lines;
 }
 
 function getSetupCommands(config: ProjectConfig): string[] {
