@@ -5,6 +5,7 @@ import ora from "ora";
 import { ProjectConfig } from "./types";
 import { getTemplate } from "./templates";
 import { scaffoldFrontendProject } from "./frontend/scaffold";
+import { scaffoldAiMlProject } from "./aiml/scaffold";
 import { getAgentRules, getDocsAgents, getDocsInstructions } from "./utils/agentRules";
 
 export class ProjectGenerator {
@@ -33,6 +34,8 @@ export class ProjectGenerator {
 
       if (this.config.appType === "frontend") {
         await scaffoldFrontendProject(this.config, projectPath);
+      } else if (this.config.appType === "ai-ml") {
+        await scaffoldAiMlProject(this.config, projectPath);
       } else {
         const template = getTemplate(this.config);
 

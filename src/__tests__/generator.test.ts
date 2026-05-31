@@ -323,6 +323,62 @@ describe("ProjectGenerator", () => {
     expect(cursorRules).toContain("Frontend");
   });
 
+  test("should create an AI/ML FastAPI serving project", async () => {
+    const config: ProjectConfig = {
+      appType: "ai-ml",
+      framework: "Python",
+      stack: "python-fastapi-serving",
+      projectName: "test-aiml-app",
+      projectPath: testDir,
+      options: {
+        template: "FastAPI Model Serving",
+        stack: "python-fastapi-serving",
+        projectDescription: "MVP Prediction service",
+        appName: "test-aiml-app",
+        servingMode: "realtime-plus-batch",
+        modelPackaging: "mlflow-ready",
+        tracking: "mlflow",
+        validation: "pydantic-plus-pandera",
+        logging: "structlog",
+        testing: "pytest-httpx",
+      },
+    };
+
+    const generator = new ProjectGenerator(config);
+    await generator.generate();
+
+    const projectPath = path.join(testDir, "test-aiml-app");
+    expect(fs.existsSync(projectPath)).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "requirements.txt"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "app/main.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "app/api/routes.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "app/core/model_loader.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "app/core/tracking.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "tests/test_predict.py"))).toBe(true);
+
+    const requirements = await fs.readFile(
+      path.join(projectPath, "requirements.txt"),
+      "utf-8"
+    );
+    expect(requirements).toContain("fastapi==");
+    expect(requirements).toContain("mlflow==");
+    expect(requirements).toContain("structlog==");
+    expect(requirements).toContain("pandera==");
+    expect(requirements).toContain("httpx==");
+
+    const routes = await fs.readFile(
+      path.join(projectPath, "app/api/routes.py"),
+      "utf-8"
+    );
+    expect(routes).toContain('/predict-batch');
+
+    const envExample = await fs.readFile(
+      path.join(projectPath, ".env.example"),
+      "utf-8"
+    );
+    expect(envExample).toContain("MLFLOW_TRACKING_URI=");
+  });
+
   test("should create a Python FastAPI project", async () => {
     const config: ProjectConfig = {
       appType: "backend",

@@ -563,9 +563,76 @@ function getFrontendTemplateName(
   }
 }
 
+async function promptForAiMlOptions(
+  projectName: string
+): Promise<
+  Pick<
+    AiMlGenerationConfig,
+    "appName" | "servingMode" | "modelPackaging" | "tracking" | "validation" | "logging" | "testing"
+  >
+> {
+  return inquirer.prompt([
+    {
+      type: "input",
+      name: "appName",
+      message: "Application name for service metadata:",
+      default: projectName,
+      validate: (input: string) => {
+        if (!input.trim()) {
+          return "Application name cannot be empty";
+        }
+        return true;
+      },
+    },
+    {
+      type: "list",
+      name: "servingMode",
+      message: "Choose the serving mode:",
+      choices: AI_ML_SERVING_CHOICES,
+      default: "realtime-api",
+    },
+    {
+      type: "list",
+      name: "modelPackaging",
+      message: "Choose the model packaging strategy:",
+      choices: AI_ML_PACKAGING_CHOICES,
+      default: "local-artifacts",
+    },
+    {
+      type: "list",
+      name: "tracking",
+      message: "Choose the experiment tracking setup:",
+      choices: AI_ML_TRACKING_CHOICES,
+      default: "mlflow",
+    },
+    {
+      type: "list",
+      name: "validation",
+      message: "Choose the validation setup:",
+      choices: AI_ML_VALIDATION_CHOICES,
+      default: "pydantic",
+    },
+    {
+      type: "list",
+      name: "logging",
+      message: "Choose the logging approach:",
+      choices: FASTAPI_LOGGING_CHOICES,
+      default: "structlog",
+    },
+    {
+      type: "list",
+      name: "testing",
+      message: "Choose the testing setup:",
+      choices: AI_ML_TESTING_CHOICES,
+      default: "pytest-httpx",
+    },
+  ]);
+}
+
 function getNextSteps(stack: SupportedStack): string[] {
   switch (stack) {
     case "python-fastapi":
+    case "python-fastapi-serving":
       return [
         "python -m venv .venv",
         "source .venv/bin/activate",
