@@ -7,7 +7,8 @@ import { getTemplate } from "./templates";
 import { scaffoldFrontendProject } from "./frontend/scaffold";
 import { scaffoldAiMlProject } from "./aiml/scaffold";
 import { scaffoldDsaProject } from "./dsa/scaffold";
-import { buildAgentIgnore, buildAiGuidance } from "./utils/agentRules";
+import { composeAgentIgnore } from "./agent/composer";
+import { buildAiGuidance } from "./utils/agentRules";
 
 export class ProjectGenerator {
   private config: ProjectConfig;
@@ -56,7 +57,7 @@ export class ProjectGenerator {
       // Add agentic AI guidelines for token efficiency
       const guidance = buildAiGuidance(this.config);
       await fs.writeFile(path.join(projectPath, ".cursorrules"), guidance.cursorRules);
-      await fs.writeFile(path.join(projectPath, ".agentignore"), buildAgentIgnore(this.config));
+      await fs.writeFile(path.join(projectPath, ".agentignore"), composeAgentIgnore(this.config));
 
       // Create docs directory and write default instruction files
       const docsDir = path.join(projectPath, "docs");

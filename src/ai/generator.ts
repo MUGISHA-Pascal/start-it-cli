@@ -6,7 +6,8 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { buildAgentIgnore, buildLegacyAiGuidance } from "../utils/agentRules";
+import { composeAgentIgnore } from "../agent/composer";
+import { buildLegacyAiGuidance } from "../utils/agentRules";
 
 export class AIProjectGenerator {
   private aiProvider: SmartAIProvider;
@@ -50,7 +51,7 @@ export class AIProjectGenerator {
       await fs.writeFile(path.join(projectDir, ".cursorrules"), guidance.cursorRules);
       await fs.writeFile(
         path.join(projectDir, ".agentignore"),
-        buildAgentIgnore({
+        composeAgentIgnore({
           appType: "backend",
           framework: recommendation.framework,
           stack: recommendation.framework === "Node.js" ? "node-ts-express" : recommendation.template,
