@@ -21,11 +21,25 @@ describe("ProjectGenerator", () => {
 
   test("should create a Go Basic CLI project", async () => {
     const config: ProjectConfig = {
+      appType: "backend",
       framework: "Go",
+      stack: "go-basic-cli",
       projectName: "test-go-app",
       projectPath: testDir,
-      options: { template: "Basic CLI" },
+      options: undefined,
     };
+    config.options = {
+      template: "Basic CLI",
+      stack: "node-ts-express",
+      projectDescription: "placeholder",
+      appName: "placeholder",
+      databases: [],
+      securityPreset: "none",
+      logging: "console",
+      monitoring: "none",
+      testing: "jest",
+      apiStyle: "rest",
+    } as any;
 
     const generator = new ProjectGenerator(config);
     await generator.generate();
@@ -49,10 +63,23 @@ describe("ProjectGenerator", () => {
 
   test("should create a Node.js Express API project", async () => {
     const config: ProjectConfig = {
+      appType: "backend",
       framework: "Node.js",
+      stack: "node-ts-express",
       projectName: "test-express-app",
       projectPath: testDir,
-      options: { template: "Express API" },
+      options: {
+        template: "Express API",
+        stack: "node-ts-express",
+        projectDescription: "A production-ready API",
+        appName: "test-express-app",
+        databases: ["postgresql", "redis"],
+        securityPreset: "bcrypt-jwt",
+        logging: "pino",
+        monitoring: "prometheus-ready",
+        testing: "jest-supertest",
+        apiStyle: "rest",
+      },
     };
 
     const generator = new ProjectGenerator(config);
@@ -75,9 +102,11 @@ describe("ProjectGenerator", () => {
     expect(
       fs.existsSync(path.join(projectPath, "src/middleware/errorHandler.ts"))
     ).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/config/database.ts"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".env.example"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "jest.config.js"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".eslintrc.cjs"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/routes/metrics.ts"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "tsconfig.json"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".cursorrules"))).toBe(true);
     const cursorRules = await fs.readFile(path.join(projectPath, ".cursorrules"), "utf-8");
@@ -96,6 +125,18 @@ describe("ProjectGenerator", () => {
     );
     expect(packageJson).toContain("\"lint\": \"eslint . --ext .ts\"");
     expect(packageJson).toContain("\"supertest\"");
+    expect(packageJson).toContain("\"pg\"");
+    expect(packageJson).toContain("\"redis\"");
+    expect(packageJson).toContain("\"pino\"");
+    expect(packageJson).toContain("\"prom-client\"");
+
+    const envExample = await fs.readFile(
+      path.join(projectPath, ".env.example"),
+      "utf-8"
+    );
+    expect(envExample).toContain("POSTGRES_URL=");
+    expect(envExample).toContain("REDIS_URL=");
+    expect(envExample).toContain("JWT_SECRET=");
 
     expect(fs.existsSync(path.join(projectPath, "docs/AGENTS.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "docs/instructions.md"))).toBe(true);
@@ -106,11 +147,25 @@ describe("ProjectGenerator", () => {
 
   test("should create a Python FastAPI project", async () => {
     const config: ProjectConfig = {
+      appType: "backend",
       framework: "Python",
+      stack: "python-fastapi",
       projectName: "test-fastapi-app",
       projectPath: testDir,
-      options: { template: "FastAPI" },
+      options: undefined,
     };
+    config.options = {
+      template: "FastAPI",
+      stack: "node-ts-express",
+      projectDescription: "placeholder",
+      appName: "placeholder",
+      databases: [],
+      securityPreset: "none",
+      logging: "console",
+      monitoring: "none",
+      testing: "jest",
+      apiStyle: "rest",
+    } as any;
 
     const generator = new ProjectGenerator(config);
     await generator.generate();
@@ -133,11 +188,25 @@ describe("ProjectGenerator", () => {
 
   test("should throw error if directory already exists", async () => {
     const config: ProjectConfig = {
+      appType: "backend",
       framework: "Go",
+      stack: "go-basic-cli",
       projectName: "test-go-app",
       projectPath: testDir,
-      options: { template: "Basic CLI" },
+      options: undefined,
     };
+    config.options = {
+      template: "Basic CLI",
+      stack: "node-ts-express",
+      projectDescription: "placeholder",
+      appName: "placeholder",
+      databases: [],
+      securityPreset: "none",
+      logging: "console",
+      monitoring: "none",
+      testing: "jest",
+      apiStyle: "rest",
+    } as any;
 
     const generator = new ProjectGenerator(config);
     await generator.generate();
@@ -150,11 +219,25 @@ describe("ProjectGenerator", () => {
 
   test("should create project with valid file contents", async () => {
     const config: ProjectConfig = {
+      appType: "backend",
       framework: "Go",
+      stack: "go-web-api",
       projectName: "test-go-web",
       projectPath: testDir,
-      options: { template: "Web API" },
+      options: undefined,
     };
+    config.options = {
+      template: "Web API",
+      stack: "node-ts-express",
+      projectDescription: "placeholder",
+      appName: "placeholder",
+      databases: [],
+      securityPreset: "none",
+      logging: "console",
+      monitoring: "none",
+      testing: "jest",
+      apiStyle: "rest",
+    } as any;
 
     const generator = new ProjectGenerator(config);
     await generator.generate();
