@@ -4,6 +4,13 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { ProjectGenerator } from "./generator";
 import {
+  AiMlGenerationConfig,
+  AiMlModelPackagingOption,
+  AiMlServingMode,
+  AiMlStack,
+  AiMlTestingOption,
+  AiMlTrackingOption,
+  AiMlValidationOption,
   AppType,
   BackendStack,
   BackendDatabase,
@@ -14,6 +21,7 @@ import {
   BackendTestingOption,
   FrontendDataFetchingOption,
   FrontendGenerationConfig,
+  FrontendNextRouterOption,
   FrontendRoutingOption,
   FrontendStack,
   FrontendStateOption,
@@ -78,6 +86,11 @@ const FRONTEND_ROUTING_CHOICES: { name: string; value: FrontendRoutingOption }[]
   { name: "React Router", value: "react-router" },
 ];
 
+const NEXT_ROUTER_CHOICES: { name: string; value: FrontendNextRouterOption }[] = [
+  { name: "App Router", value: "app-router" },
+  { name: "Pages Router", value: "pages-router" },
+];
+
 const FRONTEND_STYLING_CHOICES: { name: string; value: FrontendStylingOption }[] = [
   { name: "Plain CSS", value: "plain-css" },
   { name: "Tailwind CSS", value: "tailwind" },
@@ -99,6 +112,41 @@ const FRONTEND_TESTING_CHOICES: { name: string; value: FrontendTestingOption }[]
   { name: "Vitest + React Testing Library", value: "vitest-rtl" },
 ];
 
+const NEXT_TESTING_CHOICES: { name: string; value: FrontendTestingOption }[] = [
+  { name: "Jest", value: "jest" },
+  { name: "Jest + React Testing Library", value: "jest-rtl" },
+];
+
+const AI_ML_SERVING_CHOICES: { name: string; value: AiMlServingMode }[] = [
+  { name: "Realtime API", value: "realtime-api" },
+  { name: "Realtime + batch endpoints", value: "realtime-plus-batch" },
+];
+
+const AI_ML_PACKAGING_CHOICES: {
+  name: string;
+  value: AiMlModelPackagingOption;
+}[] = [
+  { name: "Local model artifacts", value: "local-artifacts" },
+  { name: "Hugging Face compatible", value: "huggingface-compatible" },
+  { name: "MLflow-ready packaging", value: "mlflow-ready" },
+];
+
+const AI_ML_TRACKING_CHOICES: { name: string; value: AiMlTrackingOption }[] = [
+  { name: "No experiment tracking", value: "none" },
+  { name: "MLflow", value: "mlflow" },
+  { name: "Weights & Biases ready", value: "wandb-ready" },
+];
+
+const AI_ML_VALIDATION_CHOICES: { name: string; value: AiMlValidationOption }[] = [
+  { name: "Pydantic only", value: "pydantic" },
+  { name: "Pydantic + Pandera", value: "pydantic-plus-pandera" },
+];
+
+const AI_ML_TESTING_CHOICES: { name: string; value: AiMlTestingOption }[] = [
+  { name: "Pytest", value: "pytest" },
+  { name: "Pytest + HTTPX", value: "pytest-httpx" },
+];
+
 async function main() {
   console.log(chalk.bold.cyan("\n🚀 Welcome to start-it!\n"));
   console.log(chalk.gray("Create a project from guided stack selections.\n"));
@@ -106,7 +154,7 @@ async function main() {
   try {
     const appType = await promptForAppType();
     const stack = await promptForStack(appType);
-    const projectMeta = await promptForProjectMetadata();
+    const projectMeta = await promptForProjectMetadata(appType);
     const config = await buildProjectConfig(appType, stack, projectMeta);
 
     const generator = new ProjectGenerator(config);
@@ -157,10 +205,35 @@ async function promptForStack(appType: AppType): Promise<SupportedStack> {
   return answers.stack;
 }
 
-async function promptForProjectMetadata(): Promise<{
+async function promptForProjectMetadata(appType: AppType): Promise<{
   projectName: string;
   projectDescription: string;
 }> {
+  const projectDomainChoices =
+    appType === "frontend"
+      ? [
+          "General product UI",
+          "SaaS dashboard",
+          "Content platform frontend",
+          "E-commerce storefront",
+          "Internal operations console",
+        ]
+      : appType === "ai-ml"
+        ? [
+            "Prediction service",
+            "Classification API",
+            "Embedding service",
+            "Recommendation engine",
+            "Internal ML utility",
+          ]
+        : [
+            "General business API",
+            "SaaS platform API",
+            "E-commerce backend",
+            "Content platform API",
+            "Internal operations service",
+          ];
+
   return inquirer.prompt([
     {
       type: "input",
@@ -180,14 +253,8 @@ async function promptForProjectMetadata(): Promise<{
     {
       type: "list",
       name: "projectDomain",
-      message: "Choose the backend domain:",
-      choices: [
-        "General business API",
-        "SaaS platform API",
-        "E-commerce backend",
-        "Content platform API",
-        "Internal operations service",
-      ],
+      message: "Choose the project domain:",
+      choices: projectDomainChoices,
     },
     {
       type: "list",
@@ -238,7 +305,10 @@ async function buildProjectConfig(
   }
 
   if (appType === "frontend") {
-    const frontendOptions = await promptForFrontendOptions(projectMeta.projectName);
+    const frontendOptions = await promptForFrontendOptions(
+      projectMeta.projectName,
+      stack as FrontendStack
+    );
 
     return {
       appType,
@@ -247,17 +317,42 @@ async function buildProjectConfig(
       projectName: projectMeta.projectName,
       projectPath: process.cwd(),
       options: {
-        template: "React + Vite",
+        template: getFrontendTemplateName(stack as FrontendStack),
         stack: stack as FrontendStack,
         projectDescription: projectMeta.projectDescription,
         appName: frontendOptions.appName,
         styling: frontendOptions.styling,
         routing: frontendOptions.routing,
+        nextRouter: frontendOptions.nextRouter,
         uiAddon: frontendOptions.uiAddon,
         stateManagement: frontendOptions.stateManagement,
         dataFetching: frontendOptions.dataFetching,
         testing: frontendOptions.testing,
         baselineSource: "auto",
+      },
+    };
+  }
+
+  if (appType === "ai-ml") {
+    const aiMlOptions = await promptForAiMlOptions(projectMeta.projectName);
+
+    return {
+      appType,
+      framework: getFrameworkForStack(stack),
+      stack,
+      projectName: projectMeta.projectName,
+      projectPath: process.cwd(),
+      options: {
+        template: "FastAPI Model Serving",
+        stack: stack as AiMlStack,
+        projectDescription: projectMeta.projectDescription,
+        appName: aiMlOptions.appName,
+        servingMode: aiMlOptions.servingMode,
+        modelPackaging: aiMlOptions.modelPackaging,
+        tracking: aiMlOptions.tracking,
+        validation: aiMlOptions.validation,
+        logging: aiMlOptions.logging,
+        testing: aiMlOptions.testing,
       },
     };
   }
@@ -351,13 +446,24 @@ function getTemplateNameForStack(stack: BackendStack): BackendGenerationConfig["
 }
 
 async function promptForFrontendOptions(
-  projectName: string
+  projectName: string,
+  stack: FrontendStack
 ): Promise<
   Pick<
     FrontendGenerationConfig,
-    "appName" | "routing" | "styling" | "uiAddon" | "stateManagement" | "dataFetching" | "testing"
+    | "appName"
+    | "routing"
+    | "nextRouter"
+    | "styling"
+    | "uiAddon"
+    | "stateManagement"
+    | "dataFetching"
+    | "testing"
   >
 > {
+  const testingChoices =
+    stack === "nextjs" ? NEXT_TESTING_CHOICES : FRONTEND_TESTING_CHOICES;
+  const testingDefault = stack === "nextjs" ? "jest-rtl" : "vitest-rtl";
   const answers = await inquirer.prompt([
     {
       type: "input",
@@ -375,8 +481,20 @@ async function promptForFrontendOptions(
       type: "list",
       name: "routing",
       message: "Choose the routing setup:",
-      choices: FRONTEND_ROUTING_CHOICES,
+      choices:
+        stack === "nextjs"
+          ? [{ name: "Built into Next.js", value: "none" as FrontendRoutingOption }]
+          : FRONTEND_ROUTING_CHOICES,
       default: "react-router",
+      when: stack !== "nextjs",
+    },
+    {
+      type: "list",
+      name: "nextRouter",
+      message: "Choose the Next.js router mode:",
+      choices: NEXT_ROUTER_CHOICES,
+      default: "app-router",
+      when: stack === "nextjs",
     },
     {
       type: "list",
@@ -416,15 +534,33 @@ async function promptForFrontendOptions(
       type: "list",
       name: "testing",
       message: "Choose the testing setup:",
-      choices: FRONTEND_TESTING_CHOICES,
-      default: "vitest-rtl",
+      choices: testingChoices,
+      default: testingDefault,
     },
   ]);
 
   return answers as Pick<
     FrontendGenerationConfig,
-    "appName" | "routing" | "styling" | "uiAddon" | "stateManagement" | "dataFetching" | "testing"
+    | "appName"
+    | "routing"
+    | "nextRouter"
+    | "styling"
+    | "uiAddon"
+    | "stateManagement"
+    | "dataFetching"
+    | "testing"
   >;
+}
+
+function getFrontendTemplateName(
+  stack: FrontendStack
+): FrontendGenerationConfig["template"] {
+  switch (stack) {
+    case "react-vite":
+      return "React + Vite";
+    case "nextjs":
+      return "Next.js";
+  }
 }
 
 function getNextSteps(stack: SupportedStack): string[] {
@@ -436,6 +572,8 @@ function getNextSteps(stack: SupportedStack): string[] {
         "pip install -r requirements.txt",
       ];
     case "react-vite":
+      return ["npm install", "npm run dev"];
+    case "nextjs":
       return ["npm install", "npm run dev"];
     case "node-ts-express":
     case "nestjs":

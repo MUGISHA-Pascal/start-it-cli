@@ -262,6 +262,67 @@ describe("ProjectGenerator", () => {
     expect(cursorRules).toContain("Frontend");
   });
 
+  test("should create a Next.js frontend project", async () => {
+    const config: ProjectConfig = {
+      appType: "frontend",
+      framework: "Frontend",
+      stack: "nextjs",
+      projectName: "test-next-app",
+      projectPath: testDir,
+      options: {
+        template: "Next.js",
+        stack: "nextjs",
+        projectDescription: "Production baseline Content platform API",
+        appName: "test-next-app",
+        styling: "tailwind",
+        uiAddon: "shadcn-ui",
+        stateManagement: "zustand",
+        dataFetching: "tanstack-query",
+        testing: "jest-rtl",
+        baselineSource: "local",
+        nextRouter: "app-router",
+      },
+    };
+
+    const generator = new ProjectGenerator(config);
+    await generator.generate();
+
+    const projectPath = path.join(testDir, "test-next-app");
+    expect(fs.existsSync(projectPath)).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "package.json"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/app/layout.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/app/page.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/components/Providers.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/lib/queryClient.ts"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/lib/store.ts"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/components/button.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "tailwind.config.js"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "jest.config.js"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "components.json"))).toBe(true);
+
+    const packageJson = await fs.readFile(
+      path.join(projectPath, "package.json"),
+      "utf-8"
+    );
+    expect(packageJson).toContain("\"next\"");
+    expect(packageJson).toContain("\"@tanstack/react-query\"");
+    expect(packageJson).toContain("\"zustand\"");
+    expect(packageJson).toContain("\"tailwindcss\"");
+    expect(packageJson).toContain("\"@testing-library/react\"");
+
+    const layoutFile = await fs.readFile(
+      path.join(projectPath, "src/app/layout.tsx"),
+      "utf-8"
+    );
+    expect(layoutFile).toContain("Providers");
+
+    const cursorRules = await fs.readFile(
+      path.join(projectPath, ".cursorrules"),
+      "utf-8"
+    );
+    expect(cursorRules).toContain("Frontend");
+  });
+
   test("should create a Python FastAPI project", async () => {
     const config: ProjectConfig = {
       appType: "backend",
