@@ -2,6 +2,7 @@ export type AppType = "backend" | "frontend" | "ai-ml" | "dsa-specific";
 
 export type SupportedStack = string;
 export type BackendStack = "node-ts-express" | "nestjs" | "python-fastapi";
+export type FrontendStack = "react-vite";
 
 export type BackendDatabase =
   | "postgresql"
@@ -48,6 +49,28 @@ export interface BackendGenerationConfig {
   apiStyle: "rest";
 }
 
+export type FrontendStylingOption = "plain-css" | "tailwind";
+export type FrontendRoutingOption = "none" | "react-router";
+export type FrontendUiAddon = "none" | "shadcn-ui";
+export type FrontendStateOption = "none" | "context" | "zustand";
+export type FrontendDataFetchingOption = "fetch" | "tanstack-query";
+export type FrontendTestingOption = "vitest" | "vitest-rtl";
+export type FrontendBaselineSource = "auto" | "provider" | "local";
+
+export interface FrontendGenerationConfig {
+  template: "React + Vite";
+  stack: FrontendStack;
+  projectDescription: string;
+  appName: string;
+  styling: FrontendStylingOption;
+  routing: FrontendRoutingOption;
+  uiAddon: FrontendUiAddon;
+  stateManagement: FrontendStateOption;
+  dataFetching: FrontendDataFetchingOption;
+  testing: FrontendTestingOption;
+  baselineSource: FrontendBaselineSource;
+}
+
 export interface TemplateOptions {
   template: string;
   stack?: SupportedStack;
@@ -59,6 +82,12 @@ export interface TemplateOptions {
   monitoring?: BackendMonitoringOption;
   testing?: BackendTestingOption;
   apiStyle?: "rest";
+  styling?: FrontendStylingOption;
+  routing?: FrontendRoutingOption;
+  uiAddon?: FrontendUiAddon;
+  stateManagement?: FrontendStateOption;
+  dataFetching?: FrontendDataFetchingOption;
+  baselineSource?: FrontendBaselineSource;
 }
 
 export interface ProjectConfig {

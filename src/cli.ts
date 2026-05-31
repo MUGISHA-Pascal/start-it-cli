@@ -12,6 +12,14 @@ import {
   BackendMonitoringOption,
   BackendSecurityPreset,
   BackendTestingOption,
+  FrontendDataFetchingOption,
+  FrontendGenerationConfig,
+  FrontendRoutingOption,
+  FrontendStack,
+  FrontendStateOption,
+  FrontendStylingOption,
+  FrontendTestingOption,
+  FrontendUiAddon,
   ProjectConfig,
   SupportedStack,
 } from "./types";
@@ -65,6 +73,32 @@ const FASTAPI_TESTING_CHOICES: { name: string; value: BackendTestingOption }[] =
   { name: "Pytest + HTTPX", value: "pytest-httpx" },
 ];
 
+const FRONTEND_ROUTING_CHOICES: { name: string; value: FrontendRoutingOption }[] = [
+  { name: "No routing", value: "none" },
+  { name: "React Router", value: "react-router" },
+];
+
+const FRONTEND_STYLING_CHOICES: { name: string; value: FrontendStylingOption }[] = [
+  { name: "Plain CSS", value: "plain-css" },
+  { name: "Tailwind CSS", value: "tailwind" },
+];
+
+const FRONTEND_STATE_CHOICES: { name: string; value: FrontendStateOption }[] = [
+  { name: "No shared state", value: "none" },
+  { name: "React Context", value: "context" },
+  { name: "Zustand", value: "zustand" },
+];
+
+const FRONTEND_DATA_CHOICES: { name: string; value: FrontendDataFetchingOption }[] = [
+  { name: "Native fetch", value: "fetch" },
+  { name: "TanStack Query", value: "tanstack-query" },
+];
+
+const FRONTEND_TESTING_CHOICES: { name: string; value: FrontendTestingOption }[] = [
+  { name: "Vitest", value: "vitest" },
+  { name: "Vitest + React Testing Library", value: "vitest-rtl" },
+];
+
 async function main() {
   console.log(chalk.bold.cyan("\n🚀 Welcome to start-it!\n"));
   console.log(chalk.gray("Create a project from guided stack selections.\n"));
@@ -73,30 +107,7 @@ async function main() {
     const appType = await promptForAppType();
     const stack = await promptForStack(appType);
     const projectMeta = await promptForProjectMetadata();
-    const backendOptions = await promptForBackendOptions(
-      projectMeta.projectName,
-      stack as BackendStack
-    );
-
-    const config: ProjectConfig = {
-      appType,
-      framework: getFrameworkForStack(stack),
-      stack,
-      projectName: projectMeta.projectName,
-      projectPath: process.cwd(),
-      options: {
-        template: getTemplateNameForStack(stack as BackendStack),
-        stack: stack as BackendStack,
-        projectDescription: projectMeta.projectDescription,
-        appName: backendOptions.appName,
-        databases: backendOptions.databases,
-        securityPreset: backendOptions.securityPreset,
-        logging: backendOptions.logging,
-        monitoring: backendOptions.monitoring,
-        testing: backendOptions.testing,
-        apiStyle: "rest",
-      },
-    };
+    const config = await buildProjectConfig(appType, stack, projectMeta);
 
     const generator = new ProjectGenerator(config);
     await generator.generate();
@@ -106,7 +117,7 @@ async function main() {
     );
     console.log(chalk.cyan("Next steps:"));
     console.log(chalk.gray(`  cd ${config.projectName}`));
-    for (const step of getNextSteps(config.stack as BackendStack)) {
+    for (const step of getNextSteps(config.stack)) {
       console.log(chalk.gray(`  ${step}`));
     }
     console.log(chalk.gray("  Follow the README.md for stack-specific setup\n"));
@@ -194,6 +205,66 @@ async function promptForProjectMetadata(): Promise<{
   }));
 }
 
+async function buildProjectConfig(
+  appType: AppType,
+  stack: SupportedStack,
+  projectMeta: { projectName: string; projectDescription: string }
+): Promise<ProjectConfig> {
+  if (appType === "backend") {
+    const backendOptions = await promptForBackendOptions(
+      projectMeta.projectName,
+      stack as BackendStack
+    );
+
+    return {
+      appType,
+      framework: getFrameworkForStack(stack),
+      stack,
+      projectName: projectMeta.projectName,
+      projectPath: process.cwd(),
+      options: {
+        template: getTemplateNameForStack(stack as BackendStack),
+        stack: stack as BackendStack,
+        projectDescription: projectMeta.projectDescription,
+        appName: backendOptions.appName,
+        databases: backendOptions.databases,
+        securityPreset: backendOptions.securityPreset,
+        logging: backendOptions.logging,
+        monitoring: backendOptions.monitoring,
+        testing: backendOptions.testing,
+        apiStyle: "rest",
+      },
+    };
+  }
+
+  if (appType === "frontend") {
+    const frontendOptions = await promptForFrontendOptions(projectMeta.projectName);
+
+    return {
+      appType,
+      framework: getFrameworkForStack(stack),
+      stack,
+      projectName: projectMeta.projectName,
+      projectPath: process.cwd(),
+      options: {
+        template: "React + Vite",
+        stack: stack as FrontendStack,
+        projectDescription: projectMeta.projectDescription,
+        appName: frontendOptions.appName,
+        styling: frontendOptions.styling,
+        routing: frontendOptions.routing,
+        uiAddon: frontendOptions.uiAddon,
+        stateManagement: frontendOptions.stateManagement,
+        dataFetching: frontendOptions.dataFetching,
+        testing: frontendOptions.testing,
+        baselineSource: "auto",
+      },
+    };
+  }
+
+  throw new Error(`Unsupported app type "${appType}"`);
+}
+
 async function promptForBackendOptions(
   projectName: string,
   stack: BackendStack
@@ -279,7 +350,79 @@ function getTemplateNameForStack(stack: BackendStack): BackendGenerationConfig["
   }
 }
 
-function getNextSteps(stack: BackendStack): string[] {
+async function promptForFrontendOptions(
+  projectName: string
+): Promise<
+  Pick<
+    FrontendGenerationConfig,
+    "appName" | "routing" | "styling" | "uiAddon" | "stateManagement" | "dataFetching" | "testing"
+  >
+> {
+  return inquirer.prompt([
+    {
+      type: "input",
+      name: "appName",
+      message: "Application name for UI metadata:",
+      default: projectName,
+      validate: (input: string) => {
+        if (!input.trim()) {
+          return "Application name cannot be empty";
+        }
+        return true;
+      },
+    },
+    {
+      type: "list",
+      name: "routing",
+      message: "Choose the routing setup:",
+      choices: FRONTEND_ROUTING_CHOICES,
+      default: "react-router",
+    },
+    {
+      type: "list",
+      name: "styling",
+      message: "Choose the styling baseline:",
+      choices: FRONTEND_STYLING_CHOICES,
+      default: "tailwind",
+    },
+    {
+      type: "list",
+      name: "uiAddon",
+      message: "Choose the UI add-on layer:",
+      choices: (answers: { styling: FrontendStylingOption }) =>
+        answers.styling === "tailwind"
+          ? [
+              { name: "None", value: "none" as FrontendUiAddon },
+              { name: "shadcn/ui starter", value: "shadcn-ui" as FrontendUiAddon },
+            ]
+          : [{ name: "None", value: "none" as FrontendUiAddon }],
+      default: "none",
+    },
+    {
+      type: "list",
+      name: "stateManagement",
+      message: "Choose the shared state approach:",
+      choices: FRONTEND_STATE_CHOICES,
+      default: "zustand",
+    },
+    {
+      type: "list",
+      name: "dataFetching",
+      message: "Choose the data fetching setup:",
+      choices: FRONTEND_DATA_CHOICES,
+      default: "tanstack-query",
+    },
+    {
+      type: "list",
+      name: "testing",
+      message: "Choose the testing setup:",
+      choices: FRONTEND_TESTING_CHOICES,
+      default: "vitest-rtl",
+    },
+  ]);
+}
+
+function getNextSteps(stack: SupportedStack): string[] {
   switch (stack) {
     case "python-fastapi":
       return [
@@ -287,10 +430,13 @@ function getNextSteps(stack: BackendStack): string[] {
         "source .venv/bin/activate",
         "pip install -r requirements.txt",
       ];
+    case "react-vite":
+      return ["npm install", "npm run dev"];
     case "node-ts-express":
     case "nestjs":
       return ["npm install"];
   }
+  throw new Error(`Unsupported stack "${stack}"`);
 }
 
 main();
