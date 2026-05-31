@@ -1,5 +1,6 @@
 import { ProjectConfig, TemplateOptions } from "../types";
 import {
+  composeAiMlStackBlock,
   composeAppTypeBlock,
   composeBackendStackBlock,
   composeCursorPrinciples,
@@ -144,20 +145,19 @@ function buildStackRules(config: ProjectConfig): string[] {
     rules.push("", ...frontendStackLines);
   }
 
+  const aiMlStackLines = composeAiMlStackBlock(config);
+  if (aiMlStackLines.length > 0) {
+    rules.push("", ...aiMlStackLines);
+  }
+
   switch (config.stack) {
     case "node-ts-express":
     case "nestjs":
     case "python-fastapi":
       break;
     case "python-fastapi-serving":
-      rules.push(
-        "",
-        "### FastAPI Stack Rules",
-        "",
-        "Keep route handlers small.",
-        "Place business logic in services or core modules.",
-        "Validate request and response contracts explicitly."
-      );
+    case "r-analytics":
+    case "cpp-inference":
       break;
     case "react-vite":
     case "nextjs":
