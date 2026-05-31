@@ -31,10 +31,7 @@ export class ProjectGenerator {
       await fs.ensureDir(projectPath);
 
       // Get template for the framework
-      const template = getTemplate(
-        this.config.framework,
-        this.config.options?.template || ""
-      );
+      const template = getTemplate(this.config);
 
       // Create all files from template
       for (const file of template.files) {
@@ -50,7 +47,7 @@ export class ProjectGenerator {
       // Add agentic AI guidelines for token efficiency
       const rulesContent = getAgentRules(
         this.config.framework,
-        this.config.options?.template || ""
+        this.config.options?.template || this.config.stack
       );
       await fs.writeFile(path.join(projectPath, ".cursorrules"), rulesContent);
 
@@ -59,11 +56,17 @@ export class ProjectGenerator {
       await fs.ensureDir(docsDir);
       await fs.writeFile(
         path.join(docsDir, "AGENTS.md"),
-        getDocsAgents(this.config.framework, this.config.options?.template || "")
+        getDocsAgents(
+          this.config.framework,
+          this.config.options?.template || this.config.stack
+        )
       );
       await fs.writeFile(
         path.join(docsDir, "instructions.md"),
-        getDocsInstructions(this.config.framework, this.config.options?.template || "")
+        getDocsInstructions(
+          this.config.framework,
+          this.config.options?.template || this.config.stack
+        )
       );
 
       spinner.succeed("Project structure created");

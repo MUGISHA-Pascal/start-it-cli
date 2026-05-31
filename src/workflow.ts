@@ -45,5 +45,7 @@ export function getFrameworkForStack(stack: SupportedStack): string {
   switch (stack) {
     case "node-ts-express":
       return "Node.js";
+    default:
+      throw new Error(`Unsupported stack "${stack}"`);
   }
 }

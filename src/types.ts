@@ -38,13 +38,26 @@ export interface BackendGenerationConfig {
   apiStyle: "rest";
 }
 
+export interface TemplateOptions {
+  template: string;
+  stack?: SupportedStack;
+  projectDescription?: string;
+  appName?: string;
+  databases?: BackendDatabase[];
+  securityPreset?: BackendSecurityPreset;
+  logging?: BackendLoggingOption;
+  monitoring?: BackendMonitoringOption;
+  testing?: BackendTestingOption;
+  apiStyle?: "rest";
+}
+
 export interface ProjectConfig {
   appType: AppType;
   framework: string;
   stack: SupportedStack;
   projectName: string;
   projectPath: string;
-  options?: BackendGenerationConfig;
+  options?: TemplateOptions;
 }
 
 export interface TemplateConfig {
