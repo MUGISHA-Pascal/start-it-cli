@@ -1,6 +1,7 @@
 export type AppType = "backend" | "frontend" | "ai-ml" | "dsa-specific";
 
 export type SupportedStack = string;
+export type BackendStack = "node-ts-express" | "nestjs";
 
 export type BackendDatabase =
   | "postgresql"
@@ -26,8 +27,8 @@ export type BackendMonitoringOption =
 export type BackendTestingOption = "jest" | "jest-supertest";
 
 export interface BackendGenerationConfig {
-  template: "Express API";
-  stack: "node-ts-express";
+  template: "Express API" | "NestJS API";
+  stack: BackendStack;
   projectDescription: string;
   appName: string;
   databases: BackendDatabase[];

@@ -5,6 +5,7 @@ import inquirer from "inquirer";
 import { ProjectGenerator } from "./generator";
 import {
   AppType,
+  BackendStack,
   BackendDatabase,
   BackendGenerationConfig,
   BackendLoggingOption,
@@ -38,6 +39,11 @@ const LOGGING_CHOICES: { name: string; value: BackendLoggingOption }[] = [
   { name: "Pino structured logger", value: "pino" },
 ];
 
+const NEST_LOGGING_CHOICES: { name: string; value: BackendLoggingOption }[] = [
+  { name: "Nest logger", value: "console" },
+  { name: "Pino structured logger", value: "pino" },
+];
+
 const MONITORING_CHOICES: { name: string; value: BackendMonitoringOption }[] = [
   { name: "Health check only", value: "health-only" },
   { name: "Prometheus-ready metrics", value: "prometheus-ready" },
@@ -57,7 +63,10 @@ async function main() {
     const appType = await promptForAppType();
     const stack = await promptForStack(appType);
     const projectMeta = await promptForProjectMetadata();
-    const backendOptions = await promptForBackendOptions(projectMeta.projectName);
+    const backendOptions = await promptForBackendOptions(
+      projectMeta.projectName,
+      stack as BackendStack
+    );
 
     const config: ProjectConfig = {
       appType,
@@ -66,8 +75,8 @@ async function main() {
       projectName: projectMeta.projectName,
       projectPath: process.cwd(),
       options: {
-        template: "Express API",
-        stack: "node-ts-express",
+        template: getTemplateNameForStack(stack as BackendStack),
+        stack: stack as BackendStack,
         projectDescription: projectMeta.projectDescription,
         appName: backendOptions.appName,
         databases: backendOptions.databases,
@@ -174,13 +183,17 @@ async function promptForProjectMetadata(): Promise<{
 }
 
 async function promptForBackendOptions(
-  projectName: string
+  projectName: string,
+  stack: BackendStack
 ): Promise<
   Pick<
     BackendGenerationConfig,
     "appName" | "databases" | "securityPreset" | "logging" | "monitoring" | "testing"
   >
 > {
+  const loggingChoices =
+    stack === "nestjs" ? NEST_LOGGING_CHOICES : LOGGING_CHOICES;
+
   return inquirer.prompt([
     {
       type: "input",
@@ -211,7 +224,7 @@ async function promptForBackendOptions(
       type: "list",
       name: "logging",
       message: "Choose the logging approach:",
-      choices: LOGGING_CHOICES,
+      choices: loggingChoices,
       default: "pino",
     },
     {
@@ -229,6 +242,15 @@ async function promptForBackendOptions(
       default: "jest-supertest",
     },
   ]);
+}
+
+function getTemplateNameForStack(stack: BackendStack): BackendGenerationConfig["template"] {
+  switch (stack) {
+    case "node-ts-express":
+      return "Express API";
+    case "nestjs":
+      return "NestJS API";
+  }
 }
 
 main();

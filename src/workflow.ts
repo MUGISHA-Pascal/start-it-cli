@@ -31,6 +31,10 @@ export const STACK_CHOICES: Record<AppType, DisabledChoice[]> = {
       name: "Node.js + TypeScript + Express",
       value: "node-ts-express",
     },
+    {
+      name: "NestJS",
+      value: "nestjs",
+    },
   ],
   frontend: [],
   "ai-ml": [],
@@ -44,6 +48,7 @@ export function getStackChoices(appType: AppType): DisabledChoice[] {
 export function getFrameworkForStack(stack: SupportedStack): string {
   switch (stack) {
     case "node-ts-express":
+    case "nestjs":
       return "Node.js";
     default:
       throw new Error(`Unsupported stack "${stack}"`);
