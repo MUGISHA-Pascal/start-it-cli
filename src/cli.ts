@@ -44,6 +44,11 @@ const NEST_LOGGING_CHOICES: { name: string; value: BackendLoggingOption }[] = [
   { name: "Pino structured logger", value: "pino" },
 ];
 
+const FASTAPI_LOGGING_CHOICES: { name: string; value: BackendLoggingOption }[] = [
+  { name: "Python logging", value: "python-logging" },
+  { name: "Structlog", value: "structlog" },
+];
+
 const MONITORING_CHOICES: { name: string; value: BackendMonitoringOption }[] = [
   { name: "Health check only", value: "health-only" },
   { name: "Prometheus-ready metrics", value: "prometheus-ready" },
@@ -53,6 +58,11 @@ const MONITORING_CHOICES: { name: string; value: BackendMonitoringOption }[] = [
 const TESTING_CHOICES: { name: string; value: BackendTestingOption }[] = [
   { name: "Jest only", value: "jest" },
   { name: "Jest + Supertest", value: "jest-supertest" },
+];
+
+const FASTAPI_TESTING_CHOICES: { name: string; value: BackendTestingOption }[] = [
+  { name: "Pytest", value: "pytest" },
+  { name: "Pytest + HTTPX", value: "pytest-httpx" },
 ];
 
 async function main() {
@@ -192,7 +202,19 @@ async function promptForBackendOptions(
   >
 > {
   const loggingChoices =
-    stack === "nestjs" ? NEST_LOGGING_CHOICES : LOGGING_CHOICES;
+    stack === "nestjs"
+      ? NEST_LOGGING_CHOICES
+      : stack === "python-fastapi"
+        ? FASTAPI_LOGGING_CHOICES
+        : LOGGING_CHOICES;
+  const testingChoices =
+    stack === "python-fastapi" ? FASTAPI_TESTING_CHOICES : TESTING_CHOICES;
+  const securityDefault =
+    stack === "python-fastapi" ? "argon2-jwt" : "bcrypt-jwt";
+  const loggingDefault =
+    stack === "python-fastapi" ? "structlog" : "pino";
+  const testingDefault =
+    stack === "python-fastapi" ? "pytest-httpx" : "jest-supertest";
 
   return inquirer.prompt([
     {
@@ -218,14 +240,14 @@ async function promptForBackendOptions(
       name: "securityPreset",
       message: "Choose a password and token handling preset:",
       choices: SECURITY_CHOICES,
-      default: "bcrypt-jwt",
+      default: securityDefault,
     },
     {
       type: "list",
       name: "logging",
       message: "Choose the logging approach:",
       choices: loggingChoices,
-      default: "pino",
+      default: loggingDefault,
     },
     {
       type: "list",
@@ -238,8 +260,8 @@ async function promptForBackendOptions(
       type: "list",
       name: "testing",
       message: "Choose the testing setup:",
-      choices: TESTING_CHOICES,
-      default: "jest-supertest",
+      choices: testingChoices,
+      default: testingDefault,
     },
   ]);
 }
@@ -250,6 +272,8 @@ function getTemplateNameForStack(stack: BackendStack): BackendGenerationConfig["
       return "Express API";
     case "nestjs":
       return "NestJS API";
+    case "python-fastapi":
+      return "FastAPI Service";
   }
 }
 

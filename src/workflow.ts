@@ -35,6 +35,10 @@ export const STACK_CHOICES: Record<AppType, DisabledChoice[]> = {
       name: "NestJS",
       value: "nestjs",
     },
+    {
+      name: "Python + FastAPI",
+      value: "python-fastapi",
+    },
   ],
   frontend: [],
   "ai-ml": [],
@@ -50,6 +54,8 @@ export function getFrameworkForStack(stack: SupportedStack): string {
     case "node-ts-express":
     case "nestjs":
       return "Node.js";
+    case "python-fastapi":
+      return "Python";
     default:
       throw new Error(`Unsupported stack "${stack}"`);
   }

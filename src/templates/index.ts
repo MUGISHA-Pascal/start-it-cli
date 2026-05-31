@@ -5,6 +5,7 @@ import { reactNativeTemplates } from "./react-native";
 import { springBootTemplates } from "./spring-boot";
 import { buildNodeTemplate } from "./node";
 import { buildNestTemplate } from "./nest";
+import { buildFastApiTemplate } from "./fastapi";
 import { pythonTemplates } from "./python";
 
 const allTemplates: Record<string, Record<string, TemplateConfig>> = {
@@ -22,6 +23,10 @@ export function getTemplate(config: ProjectConfig): TemplateConfig {
 
   if (config.stack === "nestjs") {
     return buildNestTemplate(config);
+  }
+
+  if (config.stack === "python-fastapi") {
+    return buildFastApiTemplate(config);
   }
 
   const frameworkTemplates = allTemplates[config.framework];

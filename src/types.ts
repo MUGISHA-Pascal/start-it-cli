@@ -1,7 +1,7 @@
 export type AppType = "backend" | "frontend" | "ai-ml" | "dsa-specific";
 
 export type SupportedStack = string;
-export type BackendStack = "node-ts-express" | "nestjs";
+export type BackendStack = "node-ts-express" | "nestjs" | "python-fastapi";
 
 export type BackendDatabase =
   | "postgresql"
@@ -17,17 +17,26 @@ export type BackendSecurityPreset =
   | "bcrypt-jwt"
   | "argon2-jwt";
 
-export type BackendLoggingOption = "console" | "morgan" | "pino";
+export type BackendLoggingOption =
+  | "console"
+  | "morgan"
+  | "pino"
+  | "python-logging"
+  | "structlog";
 
 export type BackendMonitoringOption =
   | "none"
   | "health-only"
   | "prometheus-ready";
 
-export type BackendTestingOption = "jest" | "jest-supertest";
+export type BackendTestingOption =
+  | "jest"
+  | "jest-supertest"
+  | "pytest"
+  | "pytest-httpx";
 
 export interface BackendGenerationConfig {
-  template: "Express API" | "NestJS API";
+  template: "Express API" | "NestJS API" | "FastAPI Service";
   stack: BackendStack;
   projectDescription: string;
   appName: string;
