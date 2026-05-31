@@ -6,7 +6,7 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { buildLegacyAiGuidance } from "../utils/agentRules";
+import { buildAgentIgnore, buildLegacyAiGuidance } from "../utils/agentRules";
 
 export class AIProjectGenerator {
   private aiProvider: SmartAIProvider;
@@ -48,6 +48,20 @@ export class AIProjectGenerator {
         recommendation.template
       );
       await fs.writeFile(path.join(projectDir, ".cursorrules"), guidance.cursorRules);
+      await fs.writeFile(
+        path.join(projectDir, ".agentignore"),
+        buildAgentIgnore({
+          appType: "backend",
+          framework: recommendation.framework,
+          stack: recommendation.framework === "Node.js" ? "node-ts-express" : recommendation.template,
+          projectProfile: "startup",
+          projectName: request.projectName,
+          projectPath: request.projectPath,
+          options: {
+            template: recommendation.template,
+          },
+        })
+      );
 
       // Create docs directory and write default instruction files
       const docsDir = path.join(projectDir, "docs");

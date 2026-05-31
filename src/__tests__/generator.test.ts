@@ -39,9 +39,13 @@ describe("ProjectGenerator", () => {
     expect(fs.existsSync(path.join(projectPath, "go.mod"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "README.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".cursorrules"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, ".agentignore"))).toBe(true);
     const cursorRules = await fs.readFile(path.join(projectPath, ".cursorrules"), "utf-8");
     expect(cursorRules).toContain("AI Working Rules");
     expect(cursorRules).toContain("Current profile: production");
+    const agentIgnore = await fs.readFile(path.join(projectPath, ".agentignore"), "utf-8");
+    expect(agentIgnore).toContain(".env");
+    expect(agentIgnore).toContain("node_modules/");
 
     expect(fs.existsSync(path.join(projectPath, "docs/AGENTS.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "docs/instructions.md"))).toBe(true);
@@ -99,9 +103,13 @@ describe("ProjectGenerator", () => {
     expect(fs.existsSync(path.join(projectPath, "src/routes/metrics.ts"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "tsconfig.json"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".cursorrules"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, ".agentignore"))).toBe(true);
     const cursorRules = await fs.readFile(path.join(projectPath, ".cursorrules"), "utf-8");
     expect(cursorRules).toContain("Current stack: node-ts-express");
     expect(cursorRules).toContain("Backend rule");
+    const agentIgnore = await fs.readFile(path.join(projectPath, ".agentignore"), "utf-8");
+    expect(agentIgnore).toContain(".env");
+    expect(agentIgnore).toContain("package-lock.json");
 
     const appFile = await fs.readFile(
       path.join(projectPath, "src/app.ts"),
