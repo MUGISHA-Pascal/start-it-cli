@@ -1,4 +1,9 @@
-import { ProjectConfig, ProjectProfile, TemplateOptions } from "../types";
+import { ProjectConfig, TemplateOptions } from "../types";
+import {
+  composeCursorPrinciples,
+  composeProfileBlock,
+  composeSharedConstitution,
+} from "../agent/composer";
 
 export interface AiGuidanceSet {
   cursorRules: string;
@@ -35,36 +40,7 @@ export function buildLegacyAiGuidance(
 }
 
 function buildCursorRules(config: ProjectConfig): string {
-  const lines = [
-    `# cursorrules for ${config.framework} - ${config.options?.template || config.stack}`,
-    "",
-    "# AI Working Rules",
-    "",
-    "Act like: Senior Engineer + Pragmatic Architect + Fast Implementer.",
-    "",
-    "Prioritize:",
-    "1. Correctness",
-    "2. Simplicity",
-    "3. Maintainability",
-    "4. Speed of implementation",
-    "",
-    "Do not:",
-    "- add dependencies unless necessary and requested",
-    "- create new files when an existing file should be extended",
-    "- introduce new architectural patterns without a clear reason",
-    "- rewrite large areas blindly before identifying the root cause",
-    "",
-    "Default behavior:",
-    "- read existing structure before editing",
-    "- keep responses concise",
-    "- return targeted changes only",
-    "- preserve behavior unless explicitly asked to change it",
-    "- validate critical paths before finishing",
-    "",
-    `Current profile: ${config.projectProfile}`,
-    `Current app type: ${config.appType}`,
-    `Current stack: ${config.stack}`,
-  ];
+  const lines = composeCursorPrinciples(config);
 
   const stackRule = getCursorStackRule(config);
   if (stackRule) {
@@ -92,96 +68,11 @@ function buildAgentsGuide(config: ProjectConfig): string {
     "- Dribbble designer",
     "- Framework collector",
     "",
-    "## General Principles",
-    "",
-    "Prioritize:",
-    "1. Correctness",
-    "2. Simplicity",
-    "3. Maintainability",
-    "4. Speed of implementation",
-    "",
-    "Avoid:",
-    "- unnecessary abstractions",
-    "- speculative future features",
-    "- premature optimization",
-    "- overengineering",
-    "- architecture inflation",
-    "",
-    "## Architecture",
-    "",
-    "Always follow the existing project architecture.",
-    "",
-    "Do not:",
-    "- introduce new patterns",
-    "- mix architectural styles",
-    "- create unnecessary layers",
-    "",
-    "Before creating a new file:",
-    "- check whether an existing file is responsible",
-    "",
-    "Prefer extending existing code over creating new abstractions.",
-    "",
-    "## Dependencies",
-    "",
-    "Do not add dependencies unless requested.",
-    "",
-    "Before recommending a dependency ask:",
-    "- Can this be implemented with existing tools?",
-    "- Is the dependency solving a real problem?",
-    "- Is the dependency already present?",
-    "",
-    "Prefer:",
-    "- native APIs",
-    "- existing project dependencies",
-    "",
-    "Avoid dependency proliferation.",
-    "",
-    "## File Management",
-    "",
-    "Avoid creating files unnecessarily.",
-    "",
-    "Prefer:",
-    "- modifying existing files",
-    "- keeping related logic together",
-    "",
-    "Only create a new file when:",
-    "- responsibility is clearly separate",
-    "- file size becomes unreasonable",
-    "- architecture requires separation",
-    "",
-    "## Responses",
-    "",
-    "Be concise.",
-    "",
-    "Do not:",
-    "- explain obvious code",
-    "- repeat requirements",
-    "- output unchanged files",
-    "",
-    "Return:",
-    "- changed files",
-    "- concise rationale when necessary",
-    "",
-    "## Refactoring",
-    "",
-    "Preserve behavior.",
-    "",
-    "Avoid:",
-    "- changing APIs",
-    "- changing database schemas",
-    "- renaming files",
-    "",
-    "unless explicitly requested.",
-    "",
-    "## Debugging",
-    "",
-    "Identify root cause before proposing fixes.",
-    "Do not rewrite large sections of code blindly.",
-    "Prefer minimal targeted fixes.",
+    ...composeSharedConstitution(),
     "",
     "## Current Project Profile",
     "",
-    ...buildProfileSection(config.projectProfile),
+    ...composeProfileBlock(config.projectProfile),
     "",
     "## Stack-Specific Rules",
     "",
@@ -230,48 +121,6 @@ function buildInstructionsGuide(config: ProjectConfig): string {
   }
 
   return sections.join("\n").trim();
-}
-
-function buildProfileSection(projectProfile: ProjectProfile): string[] {
-  switch (projectProfile) {
-    case "exam":
-      return [
-        "### Exam Mode",
-        "",
-        "Priorities:",
-        "1. Working functionality",
-        "2. Speed",
-        "3. Simplicity",
-        "",
-        "Avoid:",
-        "- enterprise patterns",
-        "- advanced abstractions",
-        "- excessive modularization",
-        "- unnecessary optimization",
-      ];
-    case "startup":
-      return [
-        "### Startup Mode",
-        "",
-        "Priorities:",
-        "1. Rapid delivery",
-        "2. Simplicity",
-        "3. Reasonable structure",
-        "",
-        "Accept small technical debt when it accelerates delivery.",
-      ];
-    case "production":
-      return [
-        "### Production Mode",
-        "",
-        "Priorities:",
-        "1. Maintainability",
-        "2. Validation",
-        "3. Logging",
-        "4. Error handling",
-        "5. Testing",
-      ];
-  }
 }
 
 function buildStackRules(config: ProjectConfig): string[] {
