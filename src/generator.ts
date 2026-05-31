@@ -7,7 +7,7 @@ import { getTemplate } from "./templates";
 import { scaffoldFrontendProject } from "./frontend/scaffold";
 import { scaffoldAiMlProject } from "./aiml/scaffold";
 import { scaffoldDsaProject } from "./dsa/scaffold";
-import { getAgentRules, getDocsAgents, getDocsInstructions } from "./utils/agentRules";
+import { buildAiGuidance } from "./utils/agentRules";
 
 export class ProjectGenerator {
   private config: ProjectConfig;
@@ -54,28 +54,19 @@ export class ProjectGenerator {
       }
 
       // Add agentic AI guidelines for token efficiency
-      const rulesContent = getAgentRules(
-        this.config.framework,
-        this.config.options?.template || this.config.stack
-      );
-      await fs.writeFile(path.join(projectPath, ".cursorrules"), rulesContent);
+      const guidance = buildAiGuidance(this.config);
+      await fs.writeFile(path.join(projectPath, ".cursorrules"), guidance.cursorRules);
 
       // Create docs directory and write default instruction files
       const docsDir = path.join(projectPath, "docs");
       await fs.ensureDir(docsDir);
       await fs.writeFile(
         path.join(docsDir, "AGENTS.md"),
-        getDocsAgents(
-          this.config.framework,
-          this.config.options?.template || this.config.stack
-        )
+        guidance.agents
       );
       await fs.writeFile(
         path.join(docsDir, "instructions.md"),
-        getDocsInstructions(
-          this.config.framework,
-          this.config.options?.template || this.config.stack
-        )
+        guidance.instructions
       );
 
       spinner.succeed("Project structure created");

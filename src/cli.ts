@@ -36,6 +36,7 @@ import {
   DsaStack,
   DsaTestingOption,
   DsaTrackOption,
+  ProjectProfile,
   ProjectConfig,
   SupportedStack,
 } from "./types";
@@ -263,6 +264,7 @@ async function promptForStack(appType: AppType): Promise<SupportedStack> {
 async function promptForProjectMetadata(appType: AppType): Promise<{
   projectName: string;
   projectDescription: string;
+  projectProfile: ProjectProfile;
 }> {
   const projectDomainChoices =
     appType === "frontend"
@@ -321,24 +323,46 @@ async function promptForProjectMetadata(appType: AppType): Promise<{
     },
     {
       type: "list",
-      name: "deliveryProfile",
-      message: "Choose the initial delivery profile:",
+      name: "projectProfile",
+      message: "Choose the AI engineering profile:",
       choices: [
-        "Prototype",
-        "MVP",
-        "Production baseline",
+        { name: "Exam mode", value: "exam" as ProjectProfile },
+        { name: "Startup mode", value: "startup" as ProjectProfile },
+        { name: "Production mode", value: "production" as ProjectProfile },
       ],
+      default:
+        appType === "dsa-specific"
+          ? "exam"
+          : appType === "frontend"
+            ? "startup"
+            : "production",
     },
   ]).then((answers) => ({
     projectName: answers.projectName,
-    projectDescription: `${answers.deliveryProfile} ${answers.projectDomain}`.trim(),
+    projectDescription: `${formatProjectProfileLabel(answers.projectProfile)} ${answers.projectDomain}`.trim(),
+    projectProfile: answers.projectProfile,
   }));
+}
+
+function formatProjectProfileLabel(projectProfile: ProjectProfile): string {
+  switch (projectProfile) {
+    case "exam":
+      return "Exam mode";
+    case "startup":
+      return "Startup mode";
+    case "production":
+      return "Production baseline";
+  }
 }
 
 async function buildProjectConfig(
   appType: AppType,
   stack: SupportedStack,
-  projectMeta: { projectName: string; projectDescription: string }
+  projectMeta: {
+    projectName: string;
+    projectDescription: string;
+    projectProfile: ProjectProfile;
+  }
 ): Promise<ProjectConfig> {
   if (appType === "backend") {
     const backendOptions = await promptForBackendOptions(
@@ -350,6 +374,7 @@ async function buildProjectConfig(
       appType,
       framework: getFrameworkForStack(stack),
       stack,
+      projectProfile: projectMeta.projectProfile,
       projectName: projectMeta.projectName,
       projectPath: process.cwd(),
       options: {
@@ -377,6 +402,7 @@ async function buildProjectConfig(
       appType,
       framework: getFrameworkForStack(stack),
       stack,
+      projectProfile: projectMeta.projectProfile,
       projectName: projectMeta.projectName,
       projectPath: process.cwd(),
       options: {
@@ -406,6 +432,7 @@ async function buildProjectConfig(
       appType,
       framework: getFrameworkForStack(stack),
       stack,
+      projectProfile: projectMeta.projectProfile,
       projectName: projectMeta.projectName,
       projectPath: process.cwd(),
       options: {
@@ -435,6 +462,7 @@ async function buildProjectConfig(
       appType,
       framework: getFrameworkForStack(stack),
       stack,
+      projectProfile: projectMeta.projectProfile,
       projectName: projectMeta.projectName,
       projectPath: process.cwd(),
       options: {

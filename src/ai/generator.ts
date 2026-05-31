@@ -6,7 +6,7 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { getAgentRules, getDocsAgents, getDocsInstructions } from "../utils/agentRules";
+import { buildLegacyAiGuidance } from "../utils/agentRules";
 
 export class AIProjectGenerator {
   private aiProvider: SmartAIProvider;
@@ -43,19 +43,22 @@ export class AIProjectGenerator {
       }
 
       // Add agentic AI guidelines for token efficiency
-      const rulesContent = getAgentRules(recommendation.framework, recommendation.template);
-      await fs.writeFile(path.join(projectDir, ".cursorrules"), rulesContent);
+      const guidance = buildLegacyAiGuidance(
+        recommendation.framework,
+        recommendation.template
+      );
+      await fs.writeFile(path.join(projectDir, ".cursorrules"), guidance.cursorRules);
 
       // Create docs directory and write default instruction files
       const docsDir = path.join(projectDir, "docs");
       await fs.ensureDir(docsDir);
       await fs.writeFile(
         path.join(docsDir, "AGENTS.md"),
-        getDocsAgents(recommendation.framework, recommendation.template)
+        guidance.agents
       );
       await fs.writeFile(
         path.join(docsDir, "instructions.md"),
-        getDocsInstructions(recommendation.framework, recommendation.template)
+        guidance.instructions
       );
 
       spinner.succeed("Project created successfully!");
@@ -110,6 +113,7 @@ export class AIProjectGenerator {
       appType: "backend",
       framework: recommendation.framework,
       stack: recommendation.framework === "Node.js" ? "node-ts-express" : recommendation.template,
+      projectProfile: "startup",
       projectName: "generated-project",
       projectPath: process.cwd(),
       options: {
