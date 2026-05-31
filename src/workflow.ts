@@ -66,6 +66,10 @@ export const STACK_CHOICES: Record<AppType, DisabledChoice[]> = {
       name: "C++",
       value: "dsa-cpp",
     },
+    {
+      name: "Python",
+      value: "dsa-python",
+    },
   ],
 };
 
@@ -90,6 +94,8 @@ export function getFrameworkForStack(stack: SupportedStack): string {
     case "cpp-inference":
     case "dsa-cpp":
       return "C++";
+    case "dsa-python":
+      return "Python";
     default:
       throw new Error(`Unsupported stack "${stack}"`);
   }

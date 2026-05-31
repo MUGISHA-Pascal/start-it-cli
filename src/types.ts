@@ -7,7 +7,7 @@ export type AiMlStack =
   | "python-fastapi-serving"
   | "r-analytics"
   | "cpp-inference";
-export type DsaStack = "dsa-cpp";
+export type DsaStack = "dsa-cpp" | "dsa-python";
 
 export type BackendDatabase =
   | "postgresql"
@@ -124,10 +124,10 @@ export interface AiMlGenerationConfig {
 
 export type DsaTrackOption = "competitive-programming" | "interview-prep";
 export type DsaInputMode = "stdin-stdout" | "function-first";
-export type DsaTestingOption = "manual-cases" | "ctest";
+export type DsaTestingOption = "manual-cases" | "ctest" | "pytest";
 
 export interface DsaGenerationConfig {
-  template: "C++ DSA Workspace";
+  template: "C++ DSA Workspace" | "Python DSA Workspace";
   stack: DsaStack;
   projectDescription: string;
   appName: string;

@@ -18,9 +18,12 @@ export async function scaffoldDsaProject(
 
   await fs.ensureDir(projectDir);
 
-  switch (config.stack as DsaStack) {
+  switch (options.stack) {
     case "dsa-cpp":
       await createCppDsaProject(config.projectName, projectDir, options);
+      return;
+    case "dsa-python":
+      await createPythonDsaProject(config.projectName, projectDir, options);
       return;
     default:
       throw new Error(`Unsupported dsa-specific stack "${config.stack}"`);
@@ -28,16 +31,27 @@ export async function scaffoldDsaProject(
 }
 
 function getDsaOptions(config: ProjectConfig): DsaGenerationConfig {
+  const stack = normalizeDsaStack(config.stack);
+  const isPython = stack === "dsa-python";
+
   return {
-    template: "C++ DSA Workspace",
-    stack: "dsa-cpp",
-    projectDescription:
-      config.options?.projectDescription || "C++ DSA practice workspace",
+    template: isPython ? "Python DSA Workspace" : "C++ DSA Workspace",
+    stack,
+    projectDescription: config.options?.projectDescription
+      || (isPython ? "Python DSA practice workspace" : "C++ DSA practice workspace"),
     appName: config.options?.appName || config.projectName,
     track: normalizeTrack(config.options?.track),
     inputMode: normalizeInputMode(config.options?.inputMode),
-    testing: normalizeTesting(config.options?.testing),
+    testing: normalizeTesting(config.options?.testing, stack),
   };
+}
+
+function normalizeDsaStack(stack: string): DsaStack {
+  if (stack === "dsa-python") {
+    return "dsa-python";
+  }
+
+  return "dsa-cpp";
 }
 
 function normalizeTrack(track: TemplateOptions["track"] | undefined): DsaTrackOption {
@@ -53,8 +67,13 @@ function normalizeInputMode(
 }
 
 function normalizeTesting(
-  testing: TemplateOptions["testing"] | undefined
+  testing: TemplateOptions["testing"] | undefined,
+  stack: DsaStack
 ): DsaTestingOption {
+  if (stack === "dsa-python") {
+    return testing === "pytest" ? "pytest" : "manual-cases";
+  }
+
   return testing === "ctest" ? "ctest" : "manual-cases";
 }
 
@@ -69,24 +88,54 @@ async function createCppDsaProject(
     "README.md": buildReadme(projectName, options),
     "include/solver.hpp": buildSolverHeader(),
     "src/solver.cpp": buildSolverImplementation(options),
-    "src/main.cpp": buildMainFile(options),
+    "src/main.cpp": buildCppMainFile(options),
     "problems/two_sum.md": buildProblemStatement(options),
     "examples/sample_input.txt": buildSampleInput(options),
     "examples/sample_output.txt": buildSampleOutput(options),
   };
 
   if (options.testing === "ctest") {
-    files["tests/test_solver.cpp"] = buildTestFile();
+    files["tests/test_solver.cpp"] = buildCppTestFile();
   } else {
-    files["scripts/run_cases.sh"] = buildRunScript(projectName);
+    files["scripts/run_cases.sh"] = buildCppRunScript(projectName);
   }
 
+  await writeFiles(projectDir, files);
+}
+
+async function createPythonDsaProject(
+  projectName: string,
+  projectDir: string,
+  options: DsaGenerationConfig
+) {
+  const files: Record<string, string> = {
+    ".gitignore": "__pycache__/\n.pytest_cache/\n.venv/\nvenv/\n.env\n.DS_Store\n",
+    "README.md": buildReadme(projectName, options),
+    "requirements.txt": buildPythonRequirements(options),
+    "main.py": buildPythonMainFile(options),
+    "src/__init__.py": "",
+    "src/solver.py": buildPythonSolver(options),
+    "problems/two_sum.md": buildProblemStatement(options),
+    "examples/sample_input.txt": buildSampleInput(options),
+    "examples/sample_output.txt": buildSampleOutput(options),
+  };
+
+  if (options.testing === "pytest") {
+    files["tests/test_solver.py"] = buildPythonTestFile();
+  } else {
+    files["scripts/run_cases.sh"] = buildPythonRunScript();
+  }
+
+  await writeFiles(projectDir, files);
+}
+
+async function writeFiles(projectDir: string, files: Record<string, string>) {
   for (const [relativePath, content] of Object.entries(files)) {
     const filePath = path.join(projectDir, relativePath);
     await fs.ensureDir(path.dirname(filePath));
     await fs.writeFile(filePath, content);
 
-    if (relativePath === "scripts/run_cases.sh") {
+    if (relativePath.endsWith(".sh")) {
       await fs.chmod(filePath, 0o755);
     }
   }
@@ -172,7 +221,7 @@ std::string format_answer(const std::vector<int>& indices) {
 `;
 }
 
-function buildMainFile(options: DsaGenerationConfig): string {
+function buildCppMainFile(options: DsaGenerationConfig): string {
   if (options.inputMode === "function-first") {
     return `#include "solver.hpp"
 
@@ -215,6 +264,70 @@ int main() {
 `;
 }
 
+function buildPythonRequirements(options: DsaGenerationConfig): string {
+  const requirements = options.testing === "pytest" ? ["pytest==8.3.3"] : [];
+  return `${requirements.join("\n")}${requirements.length > 0 ? "\n" : ""}`;
+}
+
+function buildPythonSolver(options: DsaGenerationConfig): string {
+  const trackComment =
+    options.track === "competitive-programming"
+      ? "# Competitive-programming baseline: optimize for fast iteration."
+      : "# Interview-prep baseline: keep the solver easy to explain.";
+
+  return `${trackComment}
+from typing import List
+
+
+def solve_two_sum(nums: List[int], target: int) -> List[int]:
+    seen: dict[int, int] = {}
+
+    for index, value in enumerate(nums):
+        complement = target - value
+        if complement in seen:
+            return [seen[complement], index]
+        seen[value] = index
+
+    raise ValueError("No valid pair found")
+
+
+def format_answer(indices: List[int]) -> str:
+    return " ".join(str(index) for index in indices)
+`;
+}
+
+function buildPythonMainFile(options: DsaGenerationConfig): string {
+  if (options.inputMode === "function-first") {
+    return `from src.solver import format_answer, solve_two_sum
+
+
+def main() -> None:
+    nums = [2, 7, 11, 15]
+    target = 9
+    answer = solve_two_sum(nums, target)
+    print(f"two_sum indices: {format_answer(answer)}")
+
+
+if __name__ == "__main__":
+    main()
+`;
+  }
+
+  return `from src.solver import format_answer, solve_two_sum
+
+
+def main() -> None:
+    count, target = map(int, input().split())
+    nums = list(map(int, input().split()))
+    answer = solve_two_sum(nums[:count], target)
+    print(format_answer(answer))
+
+
+if __name__ == "__main__":
+    main()
+`;
+}
+
 function buildProblemStatement(options: DsaGenerationConfig): string {
   const prepFocus =
     options.track === "interview-prep"
@@ -252,7 +365,7 @@ function buildSampleOutput(options: DsaGenerationConfig): string {
     : "0 1\n";
 }
 
-function buildTestFile(): string {
+function buildCppTestFile(): string {
   return `#include "solver.hpp"
 
 #include <stdexcept>
@@ -271,13 +384,30 @@ int main() {
 `;
 }
 
-function buildRunScript(projectName: string): string {
+function buildPythonTestFile(): string {
+  return `from src.solver import solve_two_sum
+
+
+def test_solve_two_sum() -> None:
+    assert solve_two_sum([2, 7, 11, 15], 9) == [0, 1]
+`;
+}
+
+function buildCppRunScript(projectName: string): string {
   return `#!/usr/bin/env bash
 set -euo pipefail
 
 cmake -S . -B build
 cmake --build build
 ./build/${projectName} < examples/sample_input.txt
+`;
+}
+
+function buildPythonRunScript(): string {
+  return `#!/usr/bin/env bash
+set -euo pipefail
+
+python main.py < examples/sample_input.txt
 `;
 }
 
@@ -289,7 +419,27 @@ function buildReadme(projectName: string, options: DsaGenerationConfig): string 
   const testingLine =
     options.testing === "ctest"
       ? "CTest is configured for quick regression checks."
-      : "A simple run script is included for manual sample-case verification.";
+      : options.testing === "pytest"
+        ? "Pytest is configured for quick solver regression checks."
+        : "A simple run script is included for manual sample-case verification.";
+  const structureLines =
+    options.stack === "dsa-python"
+      ? [
+          "- `src/solver.py`: algorithm implementation",
+          "- `main.py`: runner entry point",
+          "- `tests/`: pytest cases when enabled",
+        ]
+      : [
+          "- `include/solver.hpp`: solver declarations",
+          "- `src/solver.cpp`: algorithm implementation",
+          "- `src/main.cpp`: runner entry point",
+        ];
+  const runBlock =
+    options.stack === "dsa-python"
+      ? `python main.py < examples/sample_input.txt`
+      : `cmake -S . -B build
+cmake --build build
+./build/${projectName} < examples/sample_input.txt`;
 
   return `# ${projectName}
 
@@ -306,18 +456,14 @@ ${testingLine}
 
 ## Structure
 
-- \`include/solver.hpp\`: solver declarations
-- \`src/solver.cpp\`: algorithm implementation
-- \`src/main.cpp\`: runner entry point
+${structureLines.join("\n")}
 - \`problems/\`: prompt notes and problem statements
 - \`examples/\`: sample inputs and outputs
 
 ## Run
 
 \`\`\`bash
-cmake -S . -B build
-cmake --build build
-./build/${projectName} < examples/sample_input.txt
+${runBlock}
 \`\`\`
 
 ## Extend
