@@ -3,6 +3,7 @@ import {
   composeAppTypeBlock,
   composeBackendStackBlock,
   composeCursorPrinciples,
+  composeFrontendStackBlock,
   composeProfileBlock,
   composeSharedConstitution,
 } from "../agent/composer";
@@ -138,6 +139,11 @@ function buildStackRules(config: ProjectConfig): string[] {
     rules.push("", ...backendStackLines);
   }
 
+  const frontendStackLines = composeFrontendStackBlock(config);
+  if (frontendStackLines.length > 0) {
+    rules.push("", ...frontendStackLines);
+  }
+
   switch (config.stack) {
     case "node-ts-express":
     case "nestjs":
@@ -154,22 +160,7 @@ function buildStackRules(config: ProjectConfig): string[] {
       );
       break;
     case "react-vite":
-      rules.push(
-        "",
-        "### React + Vite Rules",
-        "",
-        "Preserve provider composition in `src/main.tsx`.",
-        "Route wiring belongs in routing modules, not scattered through components."
-      );
-      break;
     case "nextjs":
-      rules.push(
-        "",
-        "### Next.js Rules",
-        "",
-        "Respect the chosen router mode.",
-        "Do not mix App Router and Pages Router patterns in the same flow."
-      );
       break;
     case "dsa-cpp":
       rules.push(

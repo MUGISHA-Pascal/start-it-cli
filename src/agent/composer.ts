@@ -6,9 +6,11 @@ import {
 } from "./blocks/appType/backend";
 import { getDsaStandardsBlock } from "./blocks/appType/dsa";
 import { getFrontendStandardsBlock } from "./blocks/appType/frontend";
+import { getNextJsStackBlock } from "./blocks/stack/nextjs";
 import { getNestJsStackBlock } from "./blocks/stack/nestjs";
 import { getNodeTsExpressStackBlock } from "./blocks/stack/nodeTsExpress";
 import { getPythonFastApiStackBlock } from "./blocks/stack/pythonFastApi";
+import { getReactViteStackBlock } from "./blocks/stack/reactVite";
 import { getArchitectureBlock } from "./blocks/shared/architecture";
 import { getDebuggingBlock } from "./blocks/shared/debugging";
 import { getDependenciesBlock } from "./blocks/shared/dependencies";
@@ -79,6 +81,17 @@ export function composeBackendStackBlock(config: ProjectConfig): string[] {
       return getNestJsStackBlock();
     case "python-fastapi":
       return getPythonFastApiStackBlock();
+    default:
+      return [];
+  }
+}
+
+export function composeFrontendStackBlock(config: ProjectConfig): string[] {
+  switch (config.stack) {
+    case "react-vite":
+      return getReactViteStackBlock();
+    case "nextjs":
+      return getNextJsStackBlock();
     default:
       return [];
   }
