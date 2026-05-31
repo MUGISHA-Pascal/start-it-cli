@@ -3,7 +3,10 @@ export type AppType = "backend" | "frontend" | "ai-ml" | "dsa-specific";
 export type SupportedStack = string;
 export type BackendStack = "node-ts-express" | "nestjs" | "python-fastapi";
 export type FrontendStack = "react-vite" | "nextjs";
-export type AiMlStack = "python-fastapi-serving";
+export type AiMlStack =
+  | "python-fastapi-serving"
+  | "r-analytics"
+  | "cpp-inference";
 
 export type BackendDatabase =
   | "postgresql"
@@ -79,24 +82,42 @@ export interface FrontendGenerationConfig {
 }
 
 export type AiMlServingMode = "realtime-api" | "realtime-plus-batch";
+export type AiMlExecutionMode = "batch-pipeline" | "batch-plus-report";
+export type AiMlRuntimeMode = "cli-inference" | "batch-cli";
 export type AiMlModelPackagingOption =
   | "local-artifacts"
   | "huggingface-compatible"
-  | "mlflow-ready";
+  | "mlflow-ready"
+  | "onnx-ready";
 export type AiMlTrackingOption = "none" | "mlflow" | "wandb-ready";
-export type AiMlValidationOption = "pydantic" | "pydantic-plus-pandera";
-export type AiMlTestingOption = "pytest" | "pytest-httpx";
+export type AiMlValidationOption =
+  | "pydantic"
+  | "pydantic-plus-pandera"
+  | "base-checks";
+export type AiMlTestingOption =
+  | "pytest"
+  | "pytest-httpx"
+  | "testthat"
+  | "ctest";
+export type AiMlLoggingOption =
+  | "python-logging"
+  | "structlog"
+  | "r-logger"
+  | "stdout-logging"
+  | "spdlog-ready";
 
 export interface AiMlGenerationConfig {
-  template: "FastAPI Model Serving";
+  template: "FastAPI Model Serving" | "R Analytics Pipeline" | "C++ Inference Utility";
   stack: AiMlStack;
   projectDescription: string;
   appName: string;
-  servingMode: AiMlServingMode;
+  servingMode?: AiMlServingMode;
+  executionMode?: AiMlExecutionMode;
+  runtimeMode?: AiMlRuntimeMode;
   modelPackaging: AiMlModelPackagingOption;
   tracking: AiMlTrackingOption;
-  validation: AiMlValidationOption;
-  logging: "python-logging" | "structlog";
+  validation?: AiMlValidationOption;
+  logging: AiMlLoggingOption;
   testing: AiMlTestingOption;
 }
 
@@ -107,9 +128,9 @@ export interface TemplateOptions {
   appName?: string;
   databases?: BackendDatabase[];
   securityPreset?: BackendSecurityPreset;
-  logging?: BackendLoggingOption;
+  logging?: BackendLoggingOption | AiMlLoggingOption;
   monitoring?: BackendMonitoringOption;
-  testing?: BackendTestingOption | FrontendTestingOption;
+  testing?: BackendTestingOption | FrontendTestingOption | AiMlTestingOption;
   apiStyle?: "rest";
   styling?: FrontendStylingOption;
   routing?: FrontendRoutingOption;
@@ -119,6 +140,8 @@ export interface TemplateOptions {
   dataFetching?: FrontendDataFetchingOption;
   baselineSource?: FrontendBaselineSource;
   servingMode?: AiMlServingMode;
+  executionMode?: AiMlExecutionMode;
+  runtimeMode?: AiMlRuntimeMode;
   modelPackaging?: AiMlModelPackagingOption;
   tracking?: AiMlTrackingOption;
   validation?: AiMlValidationOption;

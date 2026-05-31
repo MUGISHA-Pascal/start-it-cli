@@ -4,8 +4,11 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { ProjectGenerator } from "./generator";
 import {
+  AiMlExecutionMode,
   AiMlGenerationConfig,
+  AiMlLoggingOption,
   AiMlModelPackagingOption,
+  AiMlRuntimeMode,
   AiMlServingMode,
   AiMlStack,
   AiMlTestingOption,
@@ -122,6 +125,16 @@ const AI_ML_SERVING_CHOICES: { name: string; value: AiMlServingMode }[] = [
   { name: "Realtime + batch endpoints", value: "realtime-plus-batch" },
 ];
 
+const AI_ML_EXECUTION_CHOICES: { name: string; value: AiMlExecutionMode }[] = [
+  { name: "Batch pipeline", value: "batch-pipeline" },
+  { name: "Batch pipeline + report output", value: "batch-plus-report" },
+];
+
+const AI_ML_RUNTIME_CHOICES: { name: string; value: AiMlRuntimeMode }[] = [
+  { name: "CLI inference utility", value: "cli-inference" },
+  { name: "CLI with batch input support", value: "batch-cli" },
+];
+
 const AI_ML_PACKAGING_CHOICES: {
   name: string;
   value: AiMlModelPackagingOption;
@@ -145,6 +158,23 @@ const AI_ML_VALIDATION_CHOICES: { name: string; value: AiMlValidationOption }[] 
 const AI_ML_TESTING_CHOICES: { name: string; value: AiMlTestingOption }[] = [
   { name: "Pytest", value: "pytest" },
   { name: "Pytest + HTTPX", value: "pytest-httpx" },
+];
+
+const AI_ML_R_TESTING_CHOICES: { name: string; value: AiMlTestingOption }[] = [
+  { name: "testthat", value: "testthat" },
+];
+
+const AI_ML_CPP_TESTING_CHOICES: { name: string; value: AiMlTestingOption }[] = [
+  { name: "CTest", value: "ctest" },
+];
+
+const AI_ML_R_LOGGING_CHOICES: { name: string; value: AiMlLoggingOption }[] = [
+  { name: "R logger", value: "r-logger" },
+];
+
+const AI_ML_CPP_LOGGING_CHOICES: { name: string; value: AiMlLoggingOption }[] = [
+  { name: "stdout logging", value: "stdout-logging" },
+  { name: "spdlog-ready", value: "spdlog-ready" },
 ];
 
 async function main() {
@@ -334,7 +364,10 @@ async function buildProjectConfig(
   }
 
   if (appType === "ai-ml") {
-    const aiMlOptions = await promptForAiMlOptions(projectMeta.projectName);
+    const aiMlOptions = await promptForAiMlOptions(
+      projectMeta.projectName,
+      stack as AiMlStack
+    );
 
     return {
       appType,
@@ -343,11 +376,13 @@ async function buildProjectConfig(
       projectName: projectMeta.projectName,
       projectPath: process.cwd(),
       options: {
-        template: "FastAPI Model Serving",
+        template: getAiMlTemplateName(stack as AiMlStack),
         stack: stack as AiMlStack,
         projectDescription: projectMeta.projectDescription,
         appName: aiMlOptions.appName,
         servingMode: aiMlOptions.servingMode,
+        executionMode: aiMlOptions.executionMode,
+        runtimeMode: aiMlOptions.runtimeMode,
         modelPackaging: aiMlOptions.modelPackaging,
         tracking: aiMlOptions.tracking,
         validation: aiMlOptions.validation,
@@ -564,13 +599,48 @@ function getFrontendTemplateName(
 }
 
 async function promptForAiMlOptions(
-  projectName: string
+  projectName: string,
+  stack: AiMlStack
 ): Promise<
   Pick<
     AiMlGenerationConfig,
-    "appName" | "servingMode" | "modelPackaging" | "tracking" | "validation" | "logging" | "testing"
+    | "appName"
+    | "servingMode"
+    | "executionMode"
+    | "runtimeMode"
+    | "modelPackaging"
+    | "tracking"
+    | "validation"
+    | "logging"
+    | "testing"
   >
 > {
+  const packagingChoices =
+    stack === "cpp-inference"
+      ? [
+          { name: "Local model artifacts", value: "local-artifacts" as AiMlModelPackagingOption },
+          { name: "ONNX-ready packaging", value: "onnx-ready" as AiMlModelPackagingOption },
+        ]
+      : AI_ML_PACKAGING_CHOICES.filter((choice) => choice.value !== "onnx-ready");
+  const loggingChoices =
+    stack === "r-analytics"
+      ? AI_ML_R_LOGGING_CHOICES
+      : stack === "cpp-inference"
+        ? AI_ML_CPP_LOGGING_CHOICES
+        : FASTAPI_LOGGING_CHOICES;
+  const testingChoices =
+    stack === "r-analytics"
+      ? AI_ML_R_TESTING_CHOICES
+      : stack === "cpp-inference"
+        ? AI_ML_CPP_TESTING_CHOICES
+        : AI_ML_TESTING_CHOICES;
+  const testingDefault =
+    stack === "r-analytics"
+      ? "testthat"
+      : stack === "cpp-inference"
+        ? "ctest"
+        : "pytest-httpx";
+
   return inquirer.prompt([
     {
       type: "input",
@@ -590,12 +660,29 @@ async function promptForAiMlOptions(
       message: "Choose the serving mode:",
       choices: AI_ML_SERVING_CHOICES,
       default: "realtime-api",
+      when: stack === "python-fastapi-serving",
+    },
+    {
+      type: "list",
+      name: "executionMode",
+      message: "Choose the pipeline execution mode:",
+      choices: AI_ML_EXECUTION_CHOICES,
+      default: "batch-pipeline",
+      when: stack === "r-analytics",
+    },
+    {
+      type: "list",
+      name: "runtimeMode",
+      message: "Choose the C++ runtime mode:",
+      choices: AI_ML_RUNTIME_CHOICES,
+      default: "cli-inference",
+      when: stack === "cpp-inference",
     },
     {
       type: "list",
       name: "modelPackaging",
       message: "Choose the model packaging strategy:",
-      choices: AI_ML_PACKAGING_CHOICES,
+      choices: packagingChoices,
       default: "local-artifacts",
     },
     {
@@ -609,24 +696,45 @@ async function promptForAiMlOptions(
       type: "list",
       name: "validation",
       message: "Choose the validation setup:",
-      choices: AI_ML_VALIDATION_CHOICES,
-      default: "pydantic",
+      choices:
+        stack === "python-fastapi-serving"
+          ? AI_ML_VALIDATION_CHOICES.filter((choice) => choice.value !== "base-checks")
+          : [{ name: "Base checks", value: "base-checks" as AiMlValidationOption }],
+      default: stack === "python-fastapi-serving" ? "pydantic" : "base-checks",
     },
     {
       type: "list",
       name: "logging",
       message: "Choose the logging approach:",
-      choices: FASTAPI_LOGGING_CHOICES,
-      default: "structlog",
+      choices: loggingChoices,
+      default:
+        stack === "r-analytics"
+          ? "r-logger"
+          : stack === "cpp-inference"
+            ? "stdout-logging"
+            : "structlog",
     },
     {
       type: "list",
       name: "testing",
       message: "Choose the testing setup:",
-      choices: AI_ML_TESTING_CHOICES,
-      default: "pytest-httpx",
+      choices: testingChoices,
+      default: testingDefault,
     },
   ]);
+}
+
+function getAiMlTemplateName(
+  stack: AiMlStack
+): AiMlGenerationConfig["template"] {
+  switch (stack) {
+    case "python-fastapi-serving":
+      return "FastAPI Model Serving";
+    case "r-analytics":
+      return "R Analytics Pipeline";
+    case "cpp-inference":
+      return "C++ Inference Utility";
+  }
 }
 
 function getNextSteps(stack: SupportedStack): string[] {
@@ -637,6 +745,13 @@ function getNextSteps(stack: SupportedStack): string[] {
         "python -m venv .venv",
         "source .venv/bin/activate",
         "pip install -r requirements.txt",
+      ];
+    case "r-analytics":
+      return ["Rscript scripts/run_pipeline.R"];
+    case "cpp-inference":
+      return [
+        "cmake -S . -B build",
+        "cmake --build build",
       ];
     case "react-vite":
       return ["npm install", "npm run dev"];

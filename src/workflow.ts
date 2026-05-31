@@ -53,6 +53,14 @@ export const STACK_CHOICES: Record<AppType, DisabledChoice[]> = {
       name: "Python + FastAPI Serving",
       value: "python-fastapi-serving",
     },
+    {
+      name: "R Analytics Pipeline",
+      value: "r-analytics",
+    },
+    {
+      name: "C++ Inference Utility",
+      value: "cpp-inference",
+    },
   ],
   "dsa-specific": [],
 };
@@ -73,6 +81,10 @@ export function getFrameworkForStack(stack: SupportedStack): string {
       return "Frontend";
     case "python-fastapi-serving":
       return "Python";
+    case "r-analytics":
+      return "R";
+    case "cpp-inference":
+      return "C++";
     default:
       throw new Error(`Unsupported stack "${stack}"`);
   }

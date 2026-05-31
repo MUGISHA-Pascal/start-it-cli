@@ -1,7 +1,10 @@
 import path from "path";
 import fs from "fs-extra";
 import {
+  AiMlExecutionMode,
   AiMlGenerationConfig,
+  AiMlLoggingOption,
+  AiMlRuntimeMode,
   AiMlTestingOption,
   ProjectConfig,
   TemplateOptions,
@@ -13,36 +16,121 @@ export async function scaffoldAiMlProject(
 ): Promise<void> {
   const options = getAiMlOptions(config);
 
-  if (config.stack !== "python-fastapi-serving") {
-    throw new Error(`Unsupported ai/ml stack "${config.stack}"`);
-  }
-
   await fs.ensureDir(projectDir);
-  await createFastApiServingProject(config.projectName, projectDir, options);
+
+  switch (config.stack) {
+    case "python-fastapi-serving":
+      await createFastApiServingProject(config.projectName, projectDir, options);
+      return;
+    case "r-analytics":
+      await createRAnalyticsProject(config.projectName, projectDir, options);
+      return;
+    case "cpp-inference":
+      await createCppInferenceProject(config.projectName, projectDir, options);
+      return;
+    default:
+      throw new Error(`Unsupported ai/ml stack "${config.stack}"`);
+  }
 }
 
 function getAiMlOptions(config: ProjectConfig): AiMlGenerationConfig {
+  if (config.stack === "r-analytics") {
+    return {
+      template: "R Analytics Pipeline",
+      stack: "r-analytics",
+      projectDescription: config.options?.projectDescription || "R analytics pipeline",
+      appName: config.options?.appName || config.projectName,
+      executionMode: normalizeExecutionMode(config.options?.executionMode),
+      modelPackaging: normalizeModelPackaging(config.options?.modelPackaging, "r"),
+      tracking: config.options?.tracking || "none",
+      validation: "base-checks",
+      logging: normalizeLogging(config.options?.logging, "r"),
+      testing: normalizeAiMlTesting(config.options?.testing, "r"),
+    };
+  }
+
+  if (config.stack === "cpp-inference") {
+    return {
+      template: "C++ Inference Utility",
+      stack: "cpp-inference",
+      projectDescription: config.options?.projectDescription || "C++ inference utility",
+      appName: config.options?.appName || config.projectName,
+      runtimeMode: normalizeRuntimeMode(config.options?.runtimeMode),
+      modelPackaging: normalizeModelPackaging(config.options?.modelPackaging, "cpp"),
+      tracking: "none",
+      validation: "base-checks",
+      logging: normalizeLogging(config.options?.logging, "cpp"),
+      testing: normalizeAiMlTesting(config.options?.testing, "cpp"),
+    };
+  }
+
   return {
     template: "FastAPI Model Serving",
     stack: "python-fastapi-serving",
     projectDescription: config.options?.projectDescription || "FastAPI model serving service",
     appName: config.options?.appName || config.projectName,
     servingMode: config.options?.servingMode || "realtime-api",
-    modelPackaging: config.options?.modelPackaging || "local-artifacts",
+    modelPackaging: normalizeModelPackaging(config.options?.modelPackaging, "python"),
     tracking: config.options?.tracking || "none",
     validation: config.options?.validation || "pydantic",
-    logging:
-      config.options?.logging === "structlog" ? "structlog" : "python-logging",
-    testing: normalizeAiMlTesting(config.options?.testing),
+    logging: normalizeLogging(config.options?.logging, "python"),
+    testing: normalizeAiMlTesting(config.options?.testing, "python"),
   };
 }
 
 function normalizeAiMlTesting(
-  testing: TemplateOptions["testing"] | undefined
+  testing: TemplateOptions["testing"] | undefined,
+  stack: "python" | "r" | "cpp"
 ): AiMlTestingOption {
-  return testing === "pytest" || testing === "pytest-httpx"
-    ? testing
-    : "pytest";
+  if (stack === "r") {
+    return testing === "testthat" ? testing : "testthat";
+  }
+  if (stack === "cpp") {
+    return testing === "ctest" ? testing : "ctest";
+  }
+  return testing === "pytest" || testing === "pytest-httpx" ? testing : "pytest";
+}
+
+function normalizeExecutionMode(
+  executionMode: TemplateOptions["executionMode"] | undefined
+): AiMlExecutionMode {
+  return executionMode === "batch-plus-report"
+    ? "batch-plus-report"
+    : "batch-pipeline";
+}
+
+function normalizeRuntimeMode(
+  runtimeMode: TemplateOptions["runtimeMode"] | undefined
+): AiMlRuntimeMode {
+  return runtimeMode === "batch-cli" ? "batch-cli" : "cli-inference";
+}
+
+function normalizeModelPackaging(
+  modelPackaging: TemplateOptions["modelPackaging"] | undefined,
+  stack: "python" | "r" | "cpp"
+) {
+  if (stack === "cpp") {
+    return modelPackaging === "onnx-ready" ? "onnx-ready" : "local-artifacts";
+  }
+  if (stack === "r") {
+    return modelPackaging === "mlflow-ready"
+      ? "mlflow-ready"
+      : "local-artifacts";
+  }
+  return modelPackaging || "local-artifacts";
+}
+
+function normalizeLogging(
+  logging: TemplateOptions["logging"] | undefined,
+  stack: "python" | "r" | "cpp"
+): AiMlLoggingOption {
+  if (stack === "r") {
+    return "r-logger";
+  }
+  if (stack === "cpp") {
+    return logging === "spdlog-ready" ? "spdlog-ready" : "stdout-logging";
+  }
+  return logging === "structlog" ? "structlog" : "python-logging";
 }
 
 async function createFastApiServingProject(
@@ -395,4 +483,308 @@ uvicorn app.main:app --reload
 - \`GET /health\`
 - \`POST /predict\`
 ${options.servingMode === "realtime-plus-batch" ? "- `POST /predict-batch`\n" : ""}`;
+}
+
+async function createRAnalyticsProject(
+  projectName: string,
+  projectDir: string,
+  options: AiMlGenerationConfig
+) {
+  const files: Record<string, string> = {
+    "DESCRIPTION": `Package: ${projectName}
+Type: Project
+Title: ${projectName}
+Version: 0.1.0
+Description: ${options.projectDescription}
+Encoding: UTF-8
+Depends: R (>= 4.2.0)
+Imports:
+    jsonlite,
+    readr
+`,
+    ".Rprofile": `options(stringsAsFactors = FALSE)
+`,
+    "R/model_loader.R": buildRModelLoader(options),
+    "R/pipeline.R": buildRPipeline(options),
+    "R/tracking.R": buildRTracking(options),
+    "scripts/run_pipeline.R": buildRRunner(options),
+    "data/input/.gitkeep": "",
+    "outputs/.gitkeep": "",
+    "README.md": buildRReadme(projectName, options),
+    ".gitignore": `.Rhistory
+.RData
+.Rproj.user
+renv/library/
+outputs/*.csv
+outputs/*.html
+.DS_Store
+`,
+  };
+
+  if (options.testing === "testthat") {
+    files["tests/testthat.R"] = `library(testthat)
+library(${projectName})
+`;
+    files["tests/testthat/test-pipeline.R"] = `test_that("pipeline summary returns expected fields", {
+  result <- summarize_scores(c(0.1, 0.2, 0.3))
+  expect_true("mean_score" %in% names(result))
+})
+`;
+  }
+
+  for (const [relativePath, content] of Object.entries(files)) {
+    const filePath = path.join(projectDir, relativePath);
+    await fs.ensureDir(path.dirname(filePath));
+    await fs.writeFile(filePath, content);
+  }
+}
+
+async function createCppInferenceProject(
+  projectName: string,
+  projectDir: string,
+  options: AiMlGenerationConfig
+) {
+  const files: Record<string, string> = {
+    "CMakeLists.txt": buildCppCMake(projectName, options),
+    "include/model_runner.hpp": buildCppHeader(options),
+    "src/model_runner.cpp": buildCppSource(options),
+    "src/main.cpp": buildCppMain(options),
+    "README.md": buildCppReadme(projectName, options),
+    ".gitignore": `build/
+*.o
+*.obj
+*.exe
+.DS_Store
+`,
+  };
+
+  if (options.testing === "ctest") {
+    files["tests/test_main.cpp"] = `#include "model_runner.hpp"
+#include <cassert>
+
+int main() {
+  ModelRunner runner;
+  auto result = runner.predict({0.1, 0.2, 0.3});
+  assert(result.score > 0.0);
+  return 0;
+}
+`;
+  }
+
+  for (const [relativePath, content] of Object.entries(files)) {
+    const filePath = path.join(projectDir, relativePath);
+    await fs.ensureDir(path.dirname(filePath));
+    await fs.writeFile(filePath, content);
+  }
+}
+
+function buildRModelLoader(options: AiMlGenerationConfig): string {
+  return `load_model_reference <- function() {
+  list(
+    packaging = "${options.modelPackaging}",
+    model_path = Sys.getenv("MODEL_PATH", "./models/model.rds")
+  )
+}
+`;
+}
+
+function buildRPipeline(options: AiMlGenerationConfig): string {
+  const reportBlock =
+    options.executionMode === "batch-plus-report"
+      ? `
+write_report <- function(scores) {
+  report_path <- file.path("outputs", "report.txt")
+  summary <- summarize_scores(scores)
+  writeLines(
+    c(
+      paste("mean_score:", summary$mean_score),
+      paste("count:", summary$count)
+    ),
+    report_path
+  )
+  report_path
+}
+`
+      : "";
+
+  return `summarize_scores <- function(scores) {
+  list(
+    mean_score = mean(scores),
+    count = length(scores)
+  )
+}
+
+run_pipeline <- function(scores) {
+  summary <- summarize_scores(scores)
+  output_path <- file.path("outputs", "predictions.csv")
+  readr::write_csv(
+    data.frame(score = scores),
+    output_path
+  )
+  list(output_path = output_path, summary = summary)
+}
+${reportBlock}`;
+}
+
+function buildRTracking(options: AiMlGenerationConfig): string {
+  if (options.tracking === "mlflow") {
+    return `tracking_context <- function() {
+  list(provider = "mlflow")
+}
+`;
+  }
+
+  return `tracking_context <- function() {
+  list(provider = "none")
+}
+`;
+}
+
+function buildRRunner(options: AiMlGenerationConfig): string {
+  const reportLine =
+    options.executionMode === "batch-plus-report"
+      ? `  report_path <- write_report(scores)
+  message("report written to ", report_path)
+`
+      : "";
+
+  return `source("R/model_loader.R")
+source("R/pipeline.R")
+source("R/tracking.R")
+
+scores <- c(0.12, 0.38, 0.91, 0.44)
+model_ref <- load_model_reference()
+result <- run_pipeline(scores)
+
+message("using packaging: ", model_ref$packaging)
+message("output written to ", result$output_path)
+message("tracking provider: ", tracking_context()$provider)
+${reportLine}`;
+}
+
+function buildRReadme(projectName: string, options: AiMlGenerationConfig): string {
+  return `# ${projectName}
+
+${options.projectDescription}
+
+## Scaffold Summary
+
+- App type: AI / ML
+- Stack: R analytics pipeline
+- Execution mode: ${options.executionMode}
+- Model packaging: ${options.modelPackaging}
+- Tracking: ${options.tracking}
+- Logging: ${options.logging}
+- Testing: ${options.testing}
+
+## Run
+
+\`\`\`bash
+Rscript scripts/run_pipeline.R
+\`\`\`
+`;
+}
+
+function buildCppCMake(projectName: string, options: AiMlGenerationConfig): string {
+  const testBlock =
+    options.testing === "ctest"
+      ? `
+enable_testing()
+add_executable(${projectName}_tests tests/test_main.cpp src/model_runner.cpp)
+target_include_directories(${projectName}_tests PRIVATE include)
+add_test(NAME ${projectName}_tests COMMAND ${projectName}_tests)
+`
+      : "";
+
+  return `cmake_minimum_required(VERSION 3.16)
+project(${projectName} LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_executable(${projectName} src/main.cpp src/model_runner.cpp)
+target_include_directories(${projectName} PRIVATE include)
+${testBlock}`;
+}
+
+function buildCppHeader(options: AiMlGenerationConfig): string {
+  return `#pragma once
+
+#include <string>
+#include <vector>
+
+struct PredictionResult {
+  double score;
+  std::string packaging;
+};
+
+class ModelRunner {
+ public:
+  PredictionResult predict(const std::vector<double>& features) const;
+};
+`;
+}
+
+function buildCppSource(options: AiMlGenerationConfig): string {
+  return `#include "model_runner.hpp"
+
+#include <numeric>
+
+PredictionResult ModelRunner::predict(const std::vector<double>& features) const {
+  const double sum = std::accumulate(features.begin(), features.end(), 0.0);
+  const double score = features.empty() ? 0.0 : sum / static_cast<double>(features.size());
+  return PredictionResult{score, "${options.modelPackaging}"};
+}
+`;
+}
+
+function buildCppMain(options: AiMlGenerationConfig): string {
+  const batchBlock =
+    options.runtimeMode === "batch-cli"
+      ? `
+  std::cout << "batch mode enabled" << std::endl;
+`
+      : "";
+  const loggingLine =
+    options.logging === "spdlog-ready"
+      ? `  std::cout << "[spdlog-ready] score=" << result.score << std::endl;
+`
+      : `  std::cout << "score=" << result.score << std::endl;
+`;
+
+  return `#include "model_runner.hpp"
+
+#include <iostream>
+#include <vector>
+
+int main() {
+  ModelRunner runner;
+  auto result = runner.predict({0.1, 0.2, 0.3});
+${loggingLine}${batchBlock}  std::cout << "packaging=" << result.packaging << std::endl;
+  return 0;
+}
+`;
+}
+
+function buildCppReadme(projectName: string, options: AiMlGenerationConfig): string {
+  return `# ${projectName}
+
+${options.projectDescription}
+
+## Scaffold Summary
+
+- App type: AI / ML
+- Stack: C++ inference utility
+- Runtime mode: ${options.runtimeMode}
+- Model packaging: ${options.modelPackaging}
+- Logging: ${options.logging}
+- Testing: ${options.testing}
+
+## Build
+
+\`\`\`bash
+cmake -S . -B build
+cmake --build build
+\`\`\`
+`;
 }
