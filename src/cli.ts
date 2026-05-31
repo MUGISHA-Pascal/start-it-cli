@@ -106,7 +106,9 @@ async function main() {
     );
     console.log(chalk.cyan("Next steps:"));
     console.log(chalk.gray(`  cd ${config.projectName}`));
-    console.log(chalk.gray("  npm install"));
+    for (const step of getNextSteps(config.stack as BackendStack)) {
+      console.log(chalk.gray(`  ${step}`));
+    }
     console.log(chalk.gray("  Follow the README.md for stack-specific setup\n"));
   } catch (error) {
     if (error instanceof Error) {
@@ -274,6 +276,20 @@ function getTemplateNameForStack(stack: BackendStack): BackendGenerationConfig["
       return "NestJS API";
     case "python-fastapi":
       return "FastAPI Service";
+  }
+}
+
+function getNextSteps(stack: BackendStack): string[] {
+  switch (stack) {
+    case "python-fastapi":
+      return [
+        "python -m venv .venv",
+        "source .venv/bin/activate",
+        "pip install -r requirements.txt",
+      ];
+    case "node-ts-express":
+    case "nestjs":
+      return ["npm install"];
   }
 }
 

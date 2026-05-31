@@ -208,7 +208,18 @@ describe("ProjectGenerator", () => {
       stack: "python-fastapi",
       projectName: "test-fastapi-app",
       projectPath: testDir,
-      options: { template: "FastAPI" },
+      options: {
+        template: "FastAPI Service",
+        stack: "python-fastapi",
+        projectDescription: "Production baseline Internal operations service",
+        appName: "test-fastapi-app",
+        databases: ["postgresql", "duckdb"],
+        securityPreset: "argon2-jwt",
+        logging: "structlog",
+        monitoring: "prometheus-ready",
+        testing: "pytest-httpx",
+        apiStyle: "rest",
+      },
     };
 
     const generator = new ProjectGenerator(config);
@@ -216,13 +227,35 @@ describe("ProjectGenerator", () => {
 
     const projectPath = path.join(testDir, "test-fastapi-app");
     expect(fs.existsSync(projectPath)).toBe(true);
-    expect(fs.existsSync(path.join(projectPath, "main.py"))).toBe(true);
-    expect(fs.existsSync(path.join(projectPath, "requirements.txt"))).toBe(
-      true
-    );
+    expect(fs.existsSync(path.join(projectPath, "app/main.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "requirements.txt"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "app/core/settings.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "app/core/security.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "app/db/config.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "app/metrics.py"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "tests/test_health.py"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".cursorrules"))).toBe(true);
     const cursorRules = await fs.readFile(path.join(projectPath, ".cursorrules"), "utf-8");
     expect(cursorRules).toContain("🐍 Python & PEP 8 Guidelines");
+
+    const requirements = await fs.readFile(
+      path.join(projectPath, "requirements.txt"),
+      "utf-8"
+    );
+    expect(requirements).toContain("fastapi==");
+    expect(requirements).toContain("structlog==");
+    expect(requirements).toContain("psycopg[binary]==");
+    expect(requirements).toContain("duckdb==");
+    expect(requirements).toContain("python-jose[cryptography]==");
+    expect(requirements).toContain("prometheus-client==");
+
+    const envExample = await fs.readFile(
+      path.join(projectPath, ".env.example"),
+      "utf-8"
+    );
+    expect(envExample).toContain("POSTGRES_URL=");
+    expect(envExample).toContain("DUCKDB_PATH=");
+    expect(envExample).toContain("JWT_SECRET=");
 
     expect(fs.existsSync(path.join(projectPath, "docs/AGENTS.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "docs/instructions.md"))).toBe(true);
