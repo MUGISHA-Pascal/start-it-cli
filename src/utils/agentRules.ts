@@ -1,5 +1,6 @@
 import { ProjectConfig, TemplateOptions } from "../types";
 import {
+  composeAppTypeBlock,
   composeCursorPrinciples,
   composeProfileBlock,
   composeSharedConstitution,
@@ -126,114 +127,9 @@ function buildInstructionsGuide(config: ProjectConfig): string {
 function buildStackRules(config: ProjectConfig): string[] {
   const rules: string[] = [];
 
-  if (config.appType === "backend") {
-    rules.push(
-      "### Backend Standards",
-      "",
-      "Controllers:",
-      "- request parsing",
-      "- response handling",
-      "",
-      "Services:",
-      "- business logic",
-      "",
-      "Middleware:",
-      "- cross-cutting concerns",
-      "",
-      "Validators:",
-      "- request validation",
-      "",
-      "Routes:",
-      "- endpoint definitions only",
-      "",
-      "### API Design",
-      "",
-      "Use REST conventions.",
-      "Use plural resources.",
-      "Use consistent naming.",
-      "",
-      "### API Responses",
-      "",
-      "Success shape:",
-      '`{ "success": true, "data": ... }`',
-      "",
-      "Failure shape:",
-      '`{ "success": false, "message": ... }`',
-      "",
-      "### Error Handling",
-      "",
-      "Never swallow errors.",
-      "Return meaningful messages and correct status codes.",
-      "",
-      "### Validation",
-      "",
-      "Validate all external input.",
-      "Never trust request body, params, or query values."
-    );
-
-    if (config.options?.securityPreset && config.options.securityPreset !== "none") {
-      rules.push(
-        "",
-        "### Authentication",
-        "",
-        "Use JWT for protected flows when token auth is selected.",
-        "Store passwords using bcrypt or argon2 based on the current scaffold.",
-        "Never store plain text passwords.",
-        "Never expose password hashes."
-      );
-    }
-  }
-
-  if (config.appType === "frontend") {
-    rules.push(
-      "### Frontend",
-      "",
-      "Keep components focused.",
-      "Prefer composition and reusable components.",
-      "Avoid large monolithic components and duplicated logic.",
-      "",
-      "### State",
-      "",
-      "Prefer local UI state first.",
-      "Use global state only when necessary.",
-      "Use TanStack Query for server-state flows when included in the scaffold.",
-      "",
-      "### API Access",
-      "",
-      "Do not place API calls directly inside presentational UI components.",
-      "Place API logic in dedicated modules and consume it through hooks or query layers.",
-      "",
-      "### UI Style",
-      "",
-      "Avoid gradients, glassmorphism, neon colors, excessive shadows, and decorative animation.",
-      "Prefer clean spacing, practical forms, readable tables, and clear navigation.",
-      "",
-      "### Accessibility",
-      "",
-      "Always label inputs, provide button text, and use semantic HTML."
-    );
-  }
-
-  if (config.appType === "ai-ml") {
-    rules.push(
-      "### AI / ML",
-      "",
-      "Preserve reproducibility and explicit runtime contracts.",
-      "Do not silently change model input or output shapes.",
-      "Keep validation close to ingress points.",
-      "Prefer clear model-loading boundaries over scattered runtime logic."
-    );
-  }
-
-  if (config.appType === "dsa-specific") {
-    rules.push(
-      "### DSA Workflow",
-      "",
-      "Prioritize correctness first, then time/space complexity.",
-      "Avoid overengineering helper layers for small problem sets.",
-      "Keep solver code easy to run against sample cases and tests.",
-      "If the track is interview prep, prefer readability and explainability."
-    );
+  const appTypeLines = composeAppTypeBlock(config);
+  if (appTypeLines.length > 0) {
+    rules.push(...appTypeLines);
   }
 
   switch (config.stack) {
