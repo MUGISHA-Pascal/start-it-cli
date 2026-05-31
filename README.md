@@ -70,8 +70,8 @@ $ start-it-cli
 
 AI Recommendations:
 Framework: Node.js
-Template: TypeScript Project
-Reasoning: Based on your requirements, I recommend Node.js with TypeScript for scalability
+Template: Express API
+Reasoning: Based on your requirements, I recommend a layered Node.js Express backend for fast API delivery
 
 Generated Files:
 - package.json: Complete with dependencies for auth, database, testing
@@ -129,8 +129,6 @@ Project created successfully!
 ### Node.js
 
 - Express API
-- Next.js application
-- TypeScript project
 
 ### Python
 

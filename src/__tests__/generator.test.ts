@@ -61,11 +61,41 @@ describe("ProjectGenerator", () => {
     const projectPath = path.join(testDir, "test-express-app");
     expect(fs.existsSync(projectPath)).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "package.json"))).toBe(true);
-    expect(fs.existsSync(path.join(projectPath, "src/index.ts"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/app.ts"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/server.ts"))).toBe(true);
+    expect(
+      fs.existsSync(path.join(projectPath, "src/routes/v1/exampleRoutes.ts"))
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(projectPath, "src/controllers/exampleController.ts"))
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(projectPath, "src/services/exampleService.ts"))
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(projectPath, "src/middleware/errorHandler.ts"))
+    ).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, ".env.example"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "jest.config.js"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, ".eslintrc.cjs"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "tsconfig.json"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".cursorrules"))).toBe(true);
     const cursorRules = await fs.readFile(path.join(projectPath, ".cursorrules"), "utf-8");
     expect(cursorRules).toContain("🟢 Node.js & TypeScript Guidelines");
+
+    const appFile = await fs.readFile(
+      path.join(projectPath, "src/app.ts"),
+      "utf-8"
+    );
+    expect(appFile).toContain("app.use(\"/api\", apiRouter)");
+    expect(appFile).toContain("errorHandler");
+
+    const packageJson = await fs.readFile(
+      path.join(projectPath, "package.json"),
+      "utf-8"
+    );
+    expect(packageJson).toContain("\"lint\": \"eslint . --ext .ts\"");
+    expect(packageJson).toContain("\"supertest\"");
 
     expect(fs.existsSync(path.join(projectPath, "docs/AGENTS.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "docs/instructions.md"))).toBe(true);

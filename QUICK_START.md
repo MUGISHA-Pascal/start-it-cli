@@ -91,7 +91,7 @@ python main.py
 | **Flutter**      | Mobile App, Web App, Desktop App |
 | **React Native** | Expo, Bare React Native          |
 | **Spring Boot**  | REST API, Web App, Microservice  |
-| **Node.js**      | Express API, Next.js, TypeScript |
+| **Node.js**      | Express API |
 | **Python**       | Django, Flask, FastAPI           |
 
 ## Need Help?

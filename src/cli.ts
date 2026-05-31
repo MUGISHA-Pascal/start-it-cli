@@ -261,8 +261,8 @@ async function getFrameworkOptions(
         {
           type: "list",
           name: "template",
-          message: "Select Node.js template:",
-          choices: ["Express API", "Next.js", "TypeScript Project"],
+          message: "Select Node.js backend template:",
+          choices: ["Express API"],
         },
       ]);
       options.template = nodeTemplate.template;

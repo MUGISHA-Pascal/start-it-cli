@@ -519,11 +519,7 @@ export interface Doctor extends BaseModel {
 
     switch (framework) {
       case "Node.js":
-        if (desc.includes("api") || desc.includes("backend"))
-          return "Express API";
-        if (desc.includes("fullstack") || desc.includes("ssr"))
-          return "Next.js";
-        return "TypeScript Project";
+        return "Express API";
 
       case "Go":
         if (desc.includes("api") || desc.includes("web")) return "Web API";
