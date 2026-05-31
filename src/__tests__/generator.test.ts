@@ -201,6 +201,67 @@ describe("ProjectGenerator", () => {
     expect(envExample).toContain("JWT_SECRET=");
   });
 
+  test("should create a React Vite frontend project", async () => {
+    const config: ProjectConfig = {
+      appType: "frontend",
+      framework: "Frontend",
+      stack: "react-vite",
+      projectName: "test-react-vite-app",
+      projectPath: testDir,
+      options: {
+        template: "React + Vite",
+        stack: "react-vite",
+        projectDescription: "MVP Content platform API",
+        appName: "test-react-vite-app",
+        styling: "tailwind",
+        routing: "react-router",
+        uiAddon: "shadcn-ui",
+        stateManagement: "zustand",
+        dataFetching: "tanstack-query",
+        testing: "vitest-rtl",
+        baselineSource: "local",
+      },
+    };
+
+    const generator = new ProjectGenerator(config);
+    await generator.generate();
+
+    const projectPath = path.join(testDir, "test-react-vite-app");
+    expect(fs.existsSync(projectPath)).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "package.json"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/main.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/routes.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/lib/queryClient.ts"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/lib/store.ts"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "src/components/button.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "tailwind.config.js"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "vitest.config.ts"))).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, "components.json"))).toBe(true);
+
+    const packageJson = await fs.readFile(
+      path.join(projectPath, "package.json"),
+      "utf-8"
+    );
+    expect(packageJson).toContain("\"react-router-dom\"");
+    expect(packageJson).toContain("\"@tanstack/react-query\"");
+    expect(packageJson).toContain("\"zustand\"");
+    expect(packageJson).toContain("\"tailwindcss\"");
+    expect(packageJson).toContain("\"@testing-library/react\"");
+
+    const mainFile = await fs.readFile(
+      path.join(projectPath, "src/main.tsx"),
+      "utf-8"
+    );
+    expect(mainFile).toContain("RouterProvider");
+    expect(mainFile).toContain("QueryClientProvider");
+
+    const cursorRules = await fs.readFile(
+      path.join(projectPath, ".cursorrules"),
+      "utf-8"
+    );
+    expect(cursorRules).toContain("Frontend");
+  });
+
   test("should create a Python FastAPI project", async () => {
     const config: ProjectConfig = {
       appType: "backend",

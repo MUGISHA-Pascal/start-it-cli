@@ -80,7 +80,7 @@ export interface TemplateOptions {
   securityPreset?: BackendSecurityPreset;
   logging?: BackendLoggingOption;
   monitoring?: BackendMonitoringOption;
-  testing?: BackendTestingOption;
+  testing?: BackendTestingOption | FrontendTestingOption;
   apiStyle?: "rest";
   styling?: FrontendStylingOption;
   routing?: FrontendRoutingOption;
