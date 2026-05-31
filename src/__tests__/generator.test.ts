@@ -26,20 +26,8 @@ describe("ProjectGenerator", () => {
       stack: "go-basic-cli",
       projectName: "test-go-app",
       projectPath: testDir,
-      options: undefined,
+      options: { template: "Basic CLI" },
     };
-    config.options = {
-      template: "Basic CLI",
-      stack: "node-ts-express",
-      projectDescription: "placeholder",
-      appName: "placeholder",
-      databases: [],
-      securityPreset: "none",
-      logging: "console",
-      monitoring: "none",
-      testing: "jest",
-      apiStyle: "rest",
-    } as any;
 
     const generator = new ProjectGenerator(config);
     await generator.generate();
@@ -152,20 +140,8 @@ describe("ProjectGenerator", () => {
       stack: "python-fastapi",
       projectName: "test-fastapi-app",
       projectPath: testDir,
-      options: undefined,
+      options: { template: "FastAPI" },
     };
-    config.options = {
-      template: "FastAPI",
-      stack: "node-ts-express",
-      projectDescription: "placeholder",
-      appName: "placeholder",
-      databases: [],
-      securityPreset: "none",
-      logging: "console",
-      monitoring: "none",
-      testing: "jest",
-      apiStyle: "rest",
-    } as any;
 
     const generator = new ProjectGenerator(config);
     await generator.generate();
@@ -193,20 +169,8 @@ describe("ProjectGenerator", () => {
       stack: "go-basic-cli",
       projectName: "test-go-app",
       projectPath: testDir,
-      options: undefined,
+      options: { template: "Basic CLI" },
     };
-    config.options = {
-      template: "Basic CLI",
-      stack: "node-ts-express",
-      projectDescription: "placeholder",
-      appName: "placeholder",
-      databases: [],
-      securityPreset: "none",
-      logging: "console",
-      monitoring: "none",
-      testing: "jest",
-      apiStyle: "rest",
-    } as any;
 
     const generator = new ProjectGenerator(config);
     await generator.generate();
@@ -224,20 +188,8 @@ describe("ProjectGenerator", () => {
       stack: "go-web-api",
       projectName: "test-go-web",
       projectPath: testDir,
-      options: undefined,
+      options: { template: "Web API" },
     };
-    config.options = {
-      template: "Web API",
-      stack: "node-ts-express",
-      projectDescription: "placeholder",
-      appName: "placeholder",
-      databases: [],
-      securityPreset: "none",
-      logging: "console",
-      monitoring: "none",
-      testing: "jest",
-      apiStyle: "rest",
-    } as any;
 
     const generator = new ProjectGenerator(config);
     await generator.generate();

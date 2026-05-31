@@ -1,56 +1,24 @@
-import { TemplateConfig } from "../types";
+import { BackendDatabase, BackendGenerationConfig, ProjectConfig, TemplateConfig } from "../types";
 
-export const nodeTemplates: Record<string, TemplateConfig> = {
-  "Express API": {
-    name: "Express API",
-    description: "A production-ready Express.js backend with TypeScript",
+const DATABASE_LABELS: Record<BackendDatabase, string> = {
+  postgresql: "PostgreSQL",
+  mysql: "MySQL",
+  mongodb: "MongoDB",
+  redis: "Redis",
+  duckdb: "DuckDB",
+};
+
+export function buildNodeTemplate(config: ProjectConfig): TemplateConfig {
+  const options = getBackendOptions(config);
+  const packageJson = buildPackageJson(config.projectName, options);
+
+  return {
+    name: options.template,
+    description: "Configurable Express.js backend scaffold",
     files: [
       {
         path: "package.json",
-        content: `{
-  "name": "express-api",
-  "version": "1.0.0",
-  "description": "Layered Express.js backend with TypeScript",
-  "main": "dist/server.js",
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "ts-node src/server.ts",
-    "start": "node dist/server.js",
-    "test": "jest --runInBand",
-    "test:watch": "jest --watch",
-    "lint": "eslint . --ext .ts",
-    "format": "prettier --write ."
-  },
-  "keywords": ["express", "api", "typescript", "backend"],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.18.2",
-    "helmet": "^7.1.0",
-    "morgan": "^1.10.0",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/jest": "^29.5.12",
-    "@types/morgan": "^1.9.9",
-    "@types/node": "^20.12.12",
-    "@types/supertest": "^6.0.2",
-    "@typescript-eslint/eslint-plugin": "^7.13.1",
-    "@typescript-eslint/parser": "^7.13.1",
-    "eslint": "^8.57.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.3.2",
-    "supertest": "^7.0.0",
-    "ts-jest": "^29.1.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.2"
-  }
-}
-`,
+        content: packageJson,
       },
       {
         path: "tsconfig.json",
@@ -77,11 +45,11 @@ export const nodeTemplates: Record<string, TemplateConfig> = {
       {
         path: "jest.config.js",
         content: `module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
-  clearMocks: true,
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/__tests__/**/*.test.ts"],
+  clearMocks: true
 };
 `,
       },
@@ -92,19 +60,19 @@ export const nodeTemplates: Record<string, TemplateConfig> = {
   env: {
     es2020: true,
     node: true,
-    jest: true,
+    jest: true
   },
-  parser: '@typescript-eslint/parser',
+  parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: './tsconfig.json',
-    sourceType: 'module',
+    project: "./tsconfig.json",
+    sourceType: "module"
   },
-  plugins: ['@typescript-eslint'],
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
-  ignorePatterns: ['dist'],
+  plugins: ["@typescript-eslint"],
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  ignorePatterns: ["dist"],
   rules: {
-    '@typescript-eslint/no-misused-promises': 'off',
-  },
+    "@typescript-eslint/no-misused-promises": "off"
+  }
 };
 `,
       },
@@ -119,50 +87,11 @@ export const nodeTemplates: Record<string, TemplateConfig> = {
       },
       {
         path: ".env.example",
-        content: `NODE_ENV=development
-PORT=3000
-APP_NAME=express-api
-ALLOWED_ORIGINS=http://localhost:3000
-`,
+        content: buildEnvExample(options),
       },
       {
         path: "src/app.ts",
-        content: `import cors from "cors";
-import express from "express";
-import helmet from "helmet";
-import morgan from "morgan";
-import { env } from "./config/env";
-import { errorHandler } from "./middleware/errorHandler";
-import { notFoundHandler } from "./middleware/notFound";
-import { apiRouter } from "./routes";
-
-export function createApp() {
-  const app = express();
-
-  app.use(helmet());
-  app.use(
-    cors({
-      origin: env.allowedOrigins,
-    })
-  );
-  app.use(express.json());
-  app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
-
-  app.get("/", (_req, res) => {
-    res.json({
-      service: env.appName,
-      status: "ok",
-      docs: "/api/v1/examples",
-    });
-  });
-
-  app.use("/api", apiRouter);
-  app.use(notFoundHandler);
-  app.use(errorHandler);
-
-  return app;
-}
-`,
+        content: buildAppFile(options),
       },
       {
         path: "src/server.ts",
@@ -179,27 +108,11 @@ app.listen(env.port, () => {
       },
       {
         path: "src/config/env.ts",
-        content: `import dotenv from "dotenv";
-import { z } from "zod";
-
-dotenv.config();
-
-const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  PORT: z.coerce.number().int().positive().default(3000),
-  APP_NAME: z.string().min(1).default("express-api"),
-  ALLOWED_ORIGINS: z.string().default("http://localhost:3000"),
-});
-
-const parsed = envSchema.parse(process.env);
-
-export const env = {
-  nodeEnv: parsed.NODE_ENV,
-  port: parsed.PORT,
-  appName: parsed.APP_NAME,
-  allowedOrigins: parsed.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()),
-};
-`,
+        content: buildEnvFile(options),
+      },
+      {
+        path: "src/config/database.ts",
+        content: buildDatabaseConfig(options),
       },
       {
         path: "src/controllers/healthController.ts",
@@ -211,7 +124,7 @@ export function getHealth(_req: Request, res: Response) {
     status: "ok",
     service: env.appName,
     uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   });
 }
 `,
@@ -221,28 +134,21 @@ export function getHealth(_req: Request, res: Response) {
         content: `import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { AppError } from "../lib/httpError";
+import { databaseService } from "../services/databaseService";
 import { exampleService } from "../services/exampleService";
+import { securityService } from "../services/securityService";
 
 const echoSchema = z.object({
-  message: z.string().min(1),
+  message: z.string().min(1)
 });
 
-export function listExamples(_req: Request, res: Response) {
+export async function listExamples(_req: Request, res: Response) {
   res.status(200).json({
-    data: exampleService.listCapabilities(),
-  });
-}
-
-export function getExampleByName(req: Request, res: Response, next: NextFunction) {
-  const item = exampleService.findCapability(req.params.name);
-
-  if (!item) {
-    next(new AppError(404, "Capability not found"));
-    return;
-  }
-
-  res.status(200).json({
-    data: item,
+    data: {
+      service: exampleService.describe(),
+      databases: databaseService.list(),
+      security: securityService.describe()
+    }
   });
 }
 
@@ -255,80 +161,60 @@ export function echoMessage(req: Request, res: Response, next: NextFunction) {
   }
 
   res.status(200).json({
-    data: exampleService.echo(result.data.message),
+    data: exampleService.echo(result.data.message)
   });
 }
 `,
       },
       {
         path: "src/routes/index.ts",
-        content: `import { Router } from "express";
-import { getHealth } from "../controllers/healthController";
-import { exampleRouter } from "./v1/exampleRoutes";
-
-export const apiRouter = Router();
-
-apiRouter.get("/health", getHealth);
-apiRouter.use("/v1/examples", exampleRouter);
-`,
+        content: buildRoutesIndex(options),
       },
       {
         path: "src/routes/v1/exampleRoutes.ts",
         content: `import { Router } from "express";
-import {
-  echoMessage,
-  getExampleByName,
-  listExamples,
-} from "../../controllers/exampleController";
+import { echoMessage, listExamples } from "../../controllers/exampleController";
 
 export const exampleRouter = Router();
 
 exampleRouter.get("/", listExamples);
-exampleRouter.get("/:name", getExampleByName);
 exampleRouter.post("/echo", echoMessage);
 `,
       },
       {
         path: "src/services/exampleService.ts",
-        content: `type Capability = {
-  name: string;
-  description: string;
-};
-
-const capabilities: Capability[] = [
-  {
-    name: "health",
-    description: "Health monitoring endpoint",
-  },
-  {
-    name: "validation",
-    description: "Request validation with zod",
-  },
-  {
-    name: "errors",
-    description: "Centralized error handling middleware",
-  },
-];
-
-export const exampleService = {
-  listCapabilities(): Capability[] {
-    return capabilities;
-  },
-
-  findCapability(name: string): Capability | undefined {
-    return capabilities.find(
-      (capability) => capability.name.toLowerCase() === name.toLowerCase()
-    );
+        content: `export const exampleService = {
+  describe() {
+    return {
+      apiStyle: "${options.apiStyle.toUpperCase()}",
+      logging: "${options.logging}",
+      monitoring: "${options.monitoring}"
+    };
   },
 
   echo(message: string) {
     return {
       message,
-      receivedAt: new Date().toISOString(),
+      receivedAt: new Date().toISOString()
     };
-  },
+  }
 };
 `,
+      },
+      {
+        path: "src/services/databaseService.ts",
+        content: `import { configuredDatabases } from "../config/database";
+
+export const databaseService = {
+  list() {
+    return configuredDatabases;
+  }
+};
+`,
+      },
+      {
+        path: "src/services/securityService.ts",
+        content: buildSecurityService(options),
       },
       {
         path: "src/middleware/errorHandler.ts",
@@ -347,8 +233,8 @@ export function errorHandler(
     res.status(error.statusCode).json({
       error: {
         message: error.message,
-        details: error.details ?? null,
-      },
+        details: error.details ?? null
+      }
     });
     return;
   }
@@ -357,9 +243,8 @@ export function errorHandler(
 
   res.status(500).json({
     error: {
-      message:
-        env.nodeEnv === "production" ? "Internal server error" : error.message,
-    },
+      message: env.nodeEnv === "production" ? "Internal server error" : error.message
+    }
   });
 }
 `,
@@ -390,17 +275,440 @@ export function notFoundHandler(req: Request, _res: Response, next: NextFunction
       },
       {
         path: "src/lib/logger.ts",
-        content: `export const logger = {
+        content: buildLoggerFile(options),
+      },
+      ...buildMetricsFiles(options),
+      ...buildTestFiles(options),
+      {
+        path: "README.md",
+        content: buildReadme(config.projectName, options),
+      },
+      {
+        path: ".gitignore",
+        content: `node_modules/
+dist/
+.env
+.env.local
+npm-debug.log
+.DS_Store
+.vscode/
+.idea/
+*.swp
+coverage/
+`,
+      },
+    ],
+  };
+}
+
+function getBackendOptions(config: ProjectConfig): BackendGenerationConfig {
+  if (config.options?.template === "Express API") {
+    return {
+      template: "Express API",
+      stack: "node-ts-express",
+      projectDescription: config.options.projectDescription || "Node.js backend service",
+      appName: config.options.appName || config.projectName,
+      databases: config.options.databases || [],
+      securityPreset: config.options.securityPreset || "none",
+      logging: config.options.logging || "console",
+      monitoring: config.options.monitoring || "health-only",
+      testing: config.options.testing || "jest-supertest",
+      apiStyle: config.options.apiStyle || "rest",
+    };
+  }
+
+  return {
+    template: "Express API",
+    stack: "node-ts-express",
+    projectDescription: "Node.js backend service",
+    appName: config.projectName,
+    databases: [],
+    securityPreset: "none",
+    logging: "console",
+    monitoring: "health-only",
+    testing: "jest-supertest",
+    apiStyle: "rest",
+  };
+}
+
+function buildPackageJson(
+  projectName: string,
+  options: BackendGenerationConfig
+): string {
+  const dependencies: Record<string, string> = {
+    cors: "^2.8.5",
+    dotenv: "^16.4.5",
+    express: "^4.18.2",
+    helmet: "^7.1.0",
+    zod: "^3.23.8",
+  };
+
+  if (options.logging === "morgan") {
+    dependencies.morgan = "^1.10.0";
+  }
+
+  if (options.logging === "pino") {
+    dependencies.pino = "^9.3.2";
+    dependencies["pino-http"] = "^10.3.0";
+  }
+
+  if (options.securityPreset === "bcrypt" || options.securityPreset === "bcrypt-jwt") {
+    dependencies.bcrypt = "^5.1.1";
+  }
+
+  if (options.securityPreset === "argon2" || options.securityPreset === "argon2-jwt") {
+    dependencies.argon2 = "^0.40.3";
+  }
+
+  if (options.securityPreset === "bcrypt-jwt" || options.securityPreset === "argon2-jwt") {
+    dependencies.jsonwebtoken = "^9.0.2";
+  }
+
+  if (options.monitoring === "prometheus-ready") {
+    dependencies["prom-client"] = "^15.1.3";
+  }
+
+  if (options.databases.includes("postgresql")) {
+    dependencies.pg = "^8.12.0";
+  }
+
+  if (options.databases.includes("mysql")) {
+    dependencies.mysql2 = "^3.11.0";
+  }
+
+  if (options.databases.includes("mongodb")) {
+    dependencies.mongodb = "^6.8.0";
+  }
+
+  if (options.databases.includes("redis")) {
+    dependencies.redis = "^4.6.15";
+  }
+
+  if (options.databases.includes("duckdb")) {
+    dependencies.duckdb = "^1.8.0";
+  }
+
+  const devDependencies: Record<string, string> = {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.12.12",
+    "@typescript-eslint/eslint-plugin": "^7.13.1",
+    "@typescript-eslint/parser": "^7.13.1",
+    eslint: "^8.57.0",
+    jest: "^29.7.0",
+    prettier: "^3.3.2",
+    "ts-jest": "^29.1.4",
+    "ts-node": "^10.9.2",
+    typescript: "^5.5.2",
+  };
+
+  if (options.logging === "morgan") {
+    devDependencies["@types/morgan"] = "^1.9.9";
+  }
+
+  if (options.testing === "jest-supertest") {
+    devDependencies.supertest = "^7.0.0";
+    devDependencies["@types/supertest"] = "^6.0.2";
+  }
+
+  const pkg = {
+    name: projectName,
+    version: "1.0.0",
+    description: options.projectDescription,
+    main: "dist/server.js",
+    scripts: {
+      build: "tsc -p tsconfig.json",
+      dev: "ts-node src/server.ts",
+      start: "node dist/server.js",
+      test: "jest --runInBand",
+      "test:watch": "jest --watch",
+      lint: "eslint . --ext .ts",
+      format: "prettier --write .",
+    },
+    keywords: ["backend", "express", "typescript", options.apiStyle],
+    author: "",
+    license: "MIT",
+    dependencies,
+    devDependencies,
+  };
+
+  return `${JSON.stringify(pkg, null, 2)}\n`;
+}
+
+function buildEnvExample(options: BackendGenerationConfig): string {
+  const lines = [
+    "NODE_ENV=development",
+    "PORT=3000",
+    `APP_NAME=${options.appName}`,
+    "ALLOWED_ORIGINS=http://localhost:3000",
+  ];
+
+  if (options.databases.includes("postgresql")) {
+    lines.push("POSTGRES_URL=postgresql://postgres:postgres@localhost:5432/app");
+  }
+  if (options.databases.includes("mysql")) {
+    lines.push("MYSQL_URL=mysql://root:password@localhost:3306/app");
+  }
+  if (options.databases.includes("mongodb")) {
+    lines.push("MONGODB_URL=mongodb://localhost:27017/app");
+  }
+  if (options.databases.includes("redis")) {
+    lines.push("REDIS_URL=redis://localhost:6379");
+  }
+  if (options.databases.includes("duckdb")) {
+    lines.push("DUCKDB_PATH=./data/app.duckdb");
+  }
+  if (options.securityPreset === "bcrypt-jwt" || options.securityPreset === "argon2-jwt") {
+    lines.push("JWT_SECRET=change-me");
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+function buildEnvFile(options: BackendGenerationConfig): string {
+  const schemaEntries = [
+    '  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),',
+    '  PORT: z.coerce.number().int().positive().default(3000),',
+    `  APP_NAME: z.string().min(1).default("${options.appName}"),`,
+    '  ALLOWED_ORIGINS: z.string().default("http://localhost:3000"),',
+  ];
+
+  if (options.databases.includes("postgresql")) {
+    schemaEntries.push('  POSTGRES_URL: z.string().optional(),');
+  }
+  if (options.databases.includes("mysql")) {
+    schemaEntries.push('  MYSQL_URL: z.string().optional(),');
+  }
+  if (options.databases.includes("mongodb")) {
+    schemaEntries.push('  MONGODB_URL: z.string().optional(),');
+  }
+  if (options.databases.includes("redis")) {
+    schemaEntries.push('  REDIS_URL: z.string().optional(),');
+  }
+  if (options.databases.includes("duckdb")) {
+    schemaEntries.push('  DUCKDB_PATH: z.string().optional(),');
+  }
+  if (options.securityPreset === "bcrypt-jwt" || options.securityPreset === "argon2-jwt") {
+    schemaEntries.push('  JWT_SECRET: z.string().optional(),');
+  }
+
+  return `import dotenv from "dotenv";
+import { z } from "zod";
+
+dotenv.config();
+
+const envSchema = z.object({
+${schemaEntries.join("\n")}
+});
+
+const parsed = envSchema.parse(process.env);
+
+export const env = {
+  nodeEnv: parsed.NODE_ENV,
+  port: parsed.PORT,
+  appName: parsed.APP_NAME,
+  allowedOrigins: parsed.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()),
+  raw: parsed
+};
+`;
+}
+
+function buildDatabaseConfig(options: BackendGenerationConfig): string {
+  const databases = options.databases.map((database) => ({
+    key: database,
+    name: DATABASE_LABELS[database],
+  }));
+
+  return `export const configuredDatabases = ${JSON.stringify(databases, null, 2)} as const;
+
+export function describeDatabaseSetup() {
+  if (configuredDatabases.length === 0) {
+    return "No database selected";
+  }
+
+  return configuredDatabases.map((database) => database.name).join(", ");
+}
+`;
+}
+
+function buildAppFile(options: BackendGenerationConfig): string {
+  const loggerSetup =
+    options.logging === "morgan"
+      ? '  app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));\n'
+      : options.logging === "pino"
+        ? "  app.use(httpLogger);\n"
+        : "";
+
+  const metricsImport =
+    options.monitoring === "prometheus-ready"
+      ? 'import { metricsRouter } from "./routes/metrics";\n'
+      : "";
+  const metricsUse =
+    options.monitoring === "prometheus-ready"
+      ? '  app.use("/metrics", metricsRouter);\n'
+      : "";
+  const morganImport =
+    options.logging === "morgan" ? 'import morgan from "morgan";\n' : "";
+  const pinoImport =
+    options.logging === "pino" ? 'import { httpLogger } from "./lib/logger";\n' : "";
+
+  return `import cors from "cors";
+import express from "express";
+import helmet from "helmet";
+${morganImport}${pinoImport}import { env } from "./config/env";
+import { errorHandler } from "./middleware/errorHandler";
+import { notFoundHandler } from "./middleware/notFound";
+import { apiRouter } from "./routes";
+${metricsImport}
+export function createApp() {
+  const app = express();
+
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: env.allowedOrigins
+    })
+  );
+  app.use(express.json());
+${loggerSetup}  app.get("/", (_req, res) => {
+    res.json({
+      service: env.appName,
+      status: "ok",
+      stack: "node-ts-express",
+      apiStyle: "${options.apiStyle}"
+    });
+  });
+
+  app.use("/api", apiRouter);
+${metricsUse}  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+}
+`;
+}
+
+function buildRoutesIndex(options: BackendGenerationConfig): string {
+  const metricsStatusRoute =
+    options.monitoring === "prometheus-ready"
+      ? `
+apiRouter.get("/monitoring", (_req, res) => {
+  res.status(200).json({ status: "metrics-enabled" });
+});
+`
+      : "";
+
+  return `import { Router } from "express";
+import { getHealth } from "../controllers/healthController";
+import { exampleRouter } from "./v1/exampleRoutes";
+
+export const apiRouter = Router();
+
+apiRouter.get("/health", getHealth);
+${metricsStatusRoute}apiRouter.use("/v1/examples", exampleRouter);
+`;
+}
+
+function buildSecurityService(options: BackendGenerationConfig): string {
+  const description = securityDescription(options.securityPreset);
+  const imports: string[] = [];
+  const body: string[] = [];
+
+  if (options.securityPreset === "bcrypt" || options.securityPreset === "bcrypt-jwt") {
+    imports.push('import bcrypt from "bcrypt";');
+    body.push(`  async hashPassword(value: string) {
+    return bcrypt.hash(value, 12);
+  },`);
+  }
+
+  if (options.securityPreset === "argon2" || options.securityPreset === "argon2-jwt") {
+    imports.push('import argon2 from "argon2";');
+    body.push(`  async hashPassword(value: string) {
+    return argon2.hash(value);
+  },`);
+  }
+
+  if (options.securityPreset === "none") {
+    body.push(`  async hashPassword(value: string) {
+    return value;
+  },`);
+  }
+
+  if (options.securityPreset === "bcrypt-jwt" || options.securityPreset === "argon2-jwt") {
+    imports.push('import jwt from "jsonwebtoken";');
+    body.push(`  issueToken(subject: string) {
+    return jwt.sign({ sub: subject }, process.env.JWT_SECRET || "change-me", {
+      expiresIn: "1h"
+    });
+  },`);
+  }
+
+  body.push(`  describe() {
+    return "${description}";
+  }`);
+
+  return `${imports.join("\n")}
+
+export const securityService = {
+${body.join("\n")}
+};
+`;
+}
+
+function buildLoggerFile(options: BackendGenerationConfig): string {
+  if (options.logging === "pino") {
+    return `import pino from "pino";
+import pinoHttp from "pino-http";
+
+export const logger = pino({
+  level: process.env.NODE_ENV === "production" ? "info" : "debug"
+});
+
+export const httpLogger = pinoHttp({ logger });
+`;
+  }
+
+  return `export const logger = {
   info(message: string, meta?: unknown) {
     console.log(JSON.stringify({ level: "info", message, meta: meta ?? null }));
   },
 
   error(message: string, meta?: unknown) {
     console.error(JSON.stringify({ level: "error", message, meta: meta ?? null }));
-  },
+  }
 };
+`;
+}
+
+function buildMetricsFiles(options: BackendGenerationConfig) {
+  if (options.monitoring !== "prometheus-ready") {
+    return [];
+  }
+
+  return [
+    {
+      path: "src/routes/metrics.ts",
+      content: `import { Router } from "express";
+import client from "prom-client";
+
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
+export const metricsRouter = Router();
+
+metricsRouter.get("/", async (_req, res) => {
+  res.set("Content-Type", register.contentType);
+  res.end(await register.metrics());
+});
 `,
-      },
+    },
+  ];
+}
+
+function buildTestFiles(options: BackendGenerationConfig) {
+  if (options.testing === "jest-supertest") {
+    return [
       {
         path: "src/__tests__/health.test.ts",
         content: `import request from "supertest";
@@ -415,46 +723,54 @@ describe("Express API template", () => {
     expect(response.status).toBe(200);
     expect(response.body.status).toBe("ok");
   });
-
-  it("validates echo payloads", async () => {
-    const response = await request(app).post("/api/v1/examples/echo").send({});
-
-    expect(response.status).toBe(400);
-    expect(response.body.error.message).toBe("Invalid request payload");
-  });
 });
 `,
       },
-      {
-        path: "README.md",
-        content: `# Express API Backend
+    ];
+  }
 
-Layered Express.js backend scaffolded with TypeScript.
+  return [
+    {
+      path: "src/__tests__/exampleService.test.ts",
+      content: `import { exampleService } from "../services/exampleService";
 
-## Included
+describe("exampleService", () => {
+  it("echoes a message", () => {
+    const result = exampleService.echo("hello");
 
-- Express application split into \`app\` and \`server\`
-- API routes, controllers, and services
-- Environment parsing with \`dotenv\` and \`zod\`
-- Centralized 404 and error handling middleware
-- Logging, security headers, and CORS setup
-- Jest + Supertest test starter
-- ESLint and Prettier configuration
+    expect(result.message).toBe("hello");
+  });
+});
+`,
+    },
+  ];
+}
 
-## Project Structure
+function buildReadme(
+  projectName: string,
+  options: BackendGenerationConfig
+): string {
+  const databaseList =
+    options.databases.length > 0
+      ? options.databases.map((database) => `- ${DATABASE_LABELS[database]}`).join("\n")
+      : "- None selected";
 
-\`\`\`
-src/
-  app.ts
-  server.ts
-  config/
-  controllers/
-  lib/
-  middleware/
-  routes/
-  services/
-  __tests__/
-\`\`\`
+  return `# ${projectName}
+
+${options.projectDescription}
+
+## Scaffold Summary
+
+- App type: Backend
+- Stack: Node.js + TypeScript + Express
+- API style: ${options.apiStyle.toUpperCase()}
+- Logging: ${options.logging}
+- Monitoring: ${options.monitoring}
+- Security preset: ${securityDescription(options.securityPreset)}
+
+## Selected Databases
+
+${databaseList}
 
 ## Setup
 
@@ -481,24 +797,21 @@ npm run build
 
 - \`GET /api/health\`
 - \`GET /api/v1/examples\`
-- \`GET /api/v1/examples/:name\`
 - \`POST /api/v1/examples/echo\`
-`,
-      },
-      {
-        path: ".gitignore",
-        content: `node_modules/
-dist/
-.env
-.env.local
-npm-debug.log
-.DS_Store
-.vscode/
-.idea/
-*.swp
-coverage/
-`,
-      },
-    ],
-  },
-};
+`;
+}
+
+function securityDescription(preset: BackendGenerationConfig["securityPreset"]): string {
+  switch (preset) {
+    case "bcrypt":
+      return "bcrypt password hashing";
+    case "argon2":
+      return "argon2 password hashing";
+    case "bcrypt-jwt":
+      return "bcrypt password hashing + JWT issuance";
+    case "argon2-jwt":
+      return "argon2 password hashing + JWT issuance";
+    default:
+      return "No password handling preset selected";
+  }
+}

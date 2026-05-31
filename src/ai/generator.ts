@@ -106,10 +106,16 @@ export class AIProjectGenerator {
     const recommendation = await this.aiProvider.generateProject(request);
 
     // Get the actual template
-    const template = getTemplate(
-      recommendation.framework,
-      recommendation.template
-    );
+    const template = getTemplate({
+      appType: "backend",
+      framework: recommendation.framework,
+      stack: recommendation.framework === "Node.js" ? "node-ts-express" : recommendation.template,
+      projectName: "generated-project",
+      projectPath: process.cwd(),
+      options: {
+        template: recommendation.template,
+      },
+    });
 
     // Get smart dependencies
     const dependencies = await this.aiProvider.suggestDependencies(
