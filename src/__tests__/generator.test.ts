@@ -24,6 +24,7 @@ describe("ProjectGenerator", () => {
       appType: "backend",
       framework: "Go",
       stack: "go-basic-cli",
+      projectProfile: "production",
       projectName: "test-go-app",
       projectPath: testDir,
       options: { template: "Basic CLI" },
@@ -39,14 +40,14 @@ describe("ProjectGenerator", () => {
     expect(fs.existsSync(path.join(projectPath, "README.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".cursorrules"))).toBe(true);
     const cursorRules = await fs.readFile(path.join(projectPath, ".cursorrules"), "utf-8");
-    expect(cursorRules).toContain("🤖 AI Agent Scaffolding Guidelines");
-    expect(cursorRules).toContain("🐹 Go Guidelines");
+    expect(cursorRules).toContain("AI Working Rules");
+    expect(cursorRules).toContain("Current profile: production");
 
     expect(fs.existsSync(path.join(projectPath, "docs/AGENTS.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "docs/instructions.md"))).toBe(true);
     const docsAgents = await fs.readFile(path.join(projectPath, "docs/AGENTS.md"), "utf-8");
-    expect(docsAgents).toContain("🤖 AI Agent Project Guidelines");
-    expect(docsAgents).toContain("Welcome, AI Agent!");
+    expect(docsAgents).toContain("AI Agent Constitution");
+    expect(docsAgents).toContain("General Principles");
   });
 
   test("should create a Node.js Express API project", async () => {
@@ -54,6 +55,7 @@ describe("ProjectGenerator", () => {
       appType: "backend",
       framework: "Node.js",
       stack: "node-ts-express",
+      projectProfile: "production",
       projectName: "test-express-app",
       projectPath: testDir,
       options: {
@@ -98,7 +100,8 @@ describe("ProjectGenerator", () => {
     expect(fs.existsSync(path.join(projectPath, "tsconfig.json"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".cursorrules"))).toBe(true);
     const cursorRules = await fs.readFile(path.join(projectPath, ".cursorrules"), "utf-8");
-    expect(cursorRules).toContain("🟢 Node.js & TypeScript Guidelines");
+    expect(cursorRules).toContain("Current stack: node-ts-express");
+    expect(cursorRules).toContain("Backend rule");
 
     const appFile = await fs.readFile(
       path.join(projectPath, "src/app.ts"),
@@ -130,7 +133,8 @@ describe("ProjectGenerator", () => {
     expect(fs.existsSync(path.join(projectPath, "docs/instructions.md"))).toBe(true);
     const docsInstructions = await fs.readFile(path.join(projectPath, "docs/instructions.md"), "utf-8");
     expect(docsInstructions).toContain("Developer Setup & Playbook");
-    expect(docsInstructions).toContain("Node.js");
+    expect(docsInstructions).toContain("npm install");
+    expect(docsInstructions).toContain("`src/app.ts` wires middleware and API routes.");
   });
 
   test("should create a NestJS API project", async () => {
@@ -138,6 +142,7 @@ describe("ProjectGenerator", () => {
       appType: "backend",
       framework: "Node.js",
       stack: "nestjs",
+      projectProfile: "production",
       projectName: "test-nest-app",
       projectPath: testDir,
       options: {
@@ -206,6 +211,7 @@ describe("ProjectGenerator", () => {
       appType: "frontend",
       framework: "Frontend",
       stack: "react-vite",
+      projectProfile: "startup",
       projectName: "test-react-vite-app",
       projectPath: testDir,
       options: {
@@ -259,7 +265,7 @@ describe("ProjectGenerator", () => {
       path.join(projectPath, ".cursorrules"),
       "utf-8"
     );
-    expect(cursorRules).toContain("Frontend");
+    expect(cursorRules).toContain("Current stack: react-vite");
   });
 
   test("should create a Next.js frontend project", async () => {
@@ -267,6 +273,7 @@ describe("ProjectGenerator", () => {
       appType: "frontend",
       framework: "Frontend",
       stack: "nextjs",
+      projectProfile: "startup",
       projectName: "test-next-app",
       projectPath: testDir,
       options: {
@@ -320,7 +327,7 @@ describe("ProjectGenerator", () => {
       path.join(projectPath, ".cursorrules"),
       "utf-8"
     );
-    expect(cursorRules).toContain("Frontend");
+    expect(cursorRules).toContain("Current stack: nextjs");
   });
 
   test("should create an AI/ML FastAPI serving project", async () => {
@@ -328,6 +335,7 @@ describe("ProjectGenerator", () => {
       appType: "ai-ml",
       framework: "Python",
       stack: "python-fastapi-serving",
+      projectProfile: "production",
       projectName: "test-aiml-app",
       projectPath: testDir,
       options: {
@@ -384,6 +392,7 @@ describe("ProjectGenerator", () => {
       appType: "ai-ml",
       framework: "R",
       stack: "r-analytics",
+      projectProfile: "production",
       projectName: "test-r-analytics",
       projectPath: testDir,
       options: {
@@ -429,6 +438,7 @@ describe("ProjectGenerator", () => {
       appType: "ai-ml",
       framework: "C++",
       stack: "cpp-inference",
+      projectProfile: "startup",
       projectName: "test-cpp-inference",
       projectPath: testDir,
       options: {
@@ -475,6 +485,7 @@ describe("ProjectGenerator", () => {
       appType: "dsa-specific",
       framework: "C++",
       stack: "dsa-cpp",
+      projectProfile: "exam",
       projectName: "test-dsa-cpp",
       projectPath: testDir,
       options: {
@@ -537,6 +548,7 @@ describe("ProjectGenerator", () => {
       appType: "dsa-specific",
       framework: "Python",
       stack: "dsa-python",
+      projectProfile: "exam",
       projectName: "test-dsa-python",
       projectPath: testDir,
       options: {
@@ -593,6 +605,7 @@ describe("ProjectGenerator", () => {
       appType: "backend",
       framework: "Python",
       stack: "python-fastapi",
+      projectProfile: "production",
       projectName: "test-fastapi-app",
       projectPath: testDir,
       options: {
@@ -623,7 +636,8 @@ describe("ProjectGenerator", () => {
     expect(fs.existsSync(path.join(projectPath, "tests/test_health.py"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, ".cursorrules"))).toBe(true);
     const cursorRules = await fs.readFile(path.join(projectPath, ".cursorrules"), "utf-8");
-    expect(cursorRules).toContain("🐍 Python & PEP 8 Guidelines");
+    expect(cursorRules).toContain("Current stack: python-fastapi");
+    expect(cursorRules).toContain("Backend rule");
 
     const requirements = await fs.readFile(
       path.join(projectPath, "requirements.txt"),
@@ -647,7 +661,8 @@ describe("ProjectGenerator", () => {
     expect(fs.existsSync(path.join(projectPath, "docs/AGENTS.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "docs/instructions.md"))).toBe(true);
     const docsAgents = await fs.readFile(path.join(projectPath, "docs/AGENTS.md"), "utf-8");
-    expect(docsAgents).toContain("AI Agent Project Guidelines");
+    expect(docsAgents).toContain("AI Agent Constitution");
+    expect(docsAgents).toContain("Production Mode");
   });
 
   test("should throw error if directory already exists", async () => {
@@ -655,6 +670,7 @@ describe("ProjectGenerator", () => {
       appType: "backend",
       framework: "Go",
       stack: "go-basic-cli",
+      projectProfile: "production",
       projectName: "test-go-app",
       projectPath: testDir,
       options: { template: "Basic CLI" },
@@ -674,6 +690,7 @@ describe("ProjectGenerator", () => {
       appType: "backend",
       framework: "Go",
       stack: "go-web-api",
+      projectProfile: "production",
       projectName: "test-go-web",
       projectPath: testDir,
       options: { template: "Web API" },

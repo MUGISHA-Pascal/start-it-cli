@@ -1,4 +1,5 @@
 export type AppType = "backend" | "frontend" | "ai-ml" | "dsa-specific";
+export type ProjectProfile = "exam" | "startup" | "production";
 
 export type SupportedStack = string;
 export type BackendStack = "node-ts-express" | "nestjs" | "python-fastapi";
@@ -172,6 +173,7 @@ export interface ProjectConfig {
   appType: AppType;
   framework: string;
   stack: SupportedStack;
+  projectProfile: ProjectProfile;
   projectName: string;
   projectPath: string;
   options?: TemplateOptions;
