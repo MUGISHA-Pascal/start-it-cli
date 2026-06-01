@@ -63,6 +63,8 @@ start-it-cli
 
 The CLI then guides the project setup interactively.
 
+For the full command reference, flags, output-directory options, and non-interactive examples, see [USAGE.md](./docs/USAGE.md).
+
 ## Example Flows
 
 ### Backend Example
