@@ -151,6 +151,13 @@ npm run dev
 npm test
 ```
 
+## Developer Docs
+
+- Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Local development: [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)
+- Architecture: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- CI / CD: [docs/CI_CD.md](./docs/CI_CD.md)
+
 ## Project Structure
 
 ```text
