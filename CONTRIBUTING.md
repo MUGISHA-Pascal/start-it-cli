@@ -22,6 +22,12 @@ Run the CLI locally with:
 npm run dev
 ```
 
+Related developer docs:
+
+- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- [docs/CI_CD.md](./docs/CI_CD.md)
+
 ## Current Generator Architecture
 
 The main flow is:
