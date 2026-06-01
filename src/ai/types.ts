@@ -3,7 +3,11 @@ export interface AIProjectRequest {
   framework?: string;
   features: string[];
   scale: "small" | "medium" | "large";
-  deployment?: "local" | "cloud" | "hybrid";
+  deployment?: string;
+  architecture?: string;
+  database?: string;
+  frontendStack?: string;
+  devops?: string[];
 }
 
 export interface AIRecommendation {

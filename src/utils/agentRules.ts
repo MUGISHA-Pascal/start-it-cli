@@ -1,0 +1,181 @@
+import { ProjectConfig, TemplateOptions } from "../types";
+import {
+  composeChangeProtocol,
+  composeConstitutionRules,
+  composeCursorPrinciples,
+  composeProfileBlock,
+  composeProjectInventory,
+  composeRunCommands,
+  composeSelectedChoiceLines,
+  composeSetupCommands,
+  composeSharedConstitution,
+  composeVerificationCommands,
+} from "../agent/composer";
+
+export interface AiGuidanceSet {
+  cursorRules: string;
+  agents: string;
+  instructions: string;
+}
+
+export function buildAiGuidance(config: ProjectConfig): AiGuidanceSet {
+  return {
+    cursorRules: buildCursorRules(config),
+    agents: buildAgentsGuide(config),
+    instructions: buildInstructionsGuide(config),
+  };
+}
+
+export function buildLegacyAiGuidance(
+  framework: string,
+  template: string
+): AiGuidanceSet {
+  const stack = mapLegacyStack(framework, template);
+  const config: ProjectConfig = {
+    appType: mapLegacyAppType(stack),
+    framework,
+    stack,
+    projectProfile: "startup",
+    projectName: "generated-project",
+    projectPath: process.cwd(),
+    options: {
+      template,
+    },
+  };
+
+  return buildAiGuidance(config);
+}
+
+function buildCursorRules(config: ProjectConfig): string {
+  const lines = composeCursorPrinciples(config);
+
+  const stackRule = getCursorStackRule(config);
+  if (stackRule) {
+    lines.push("", stackRule);
+  }
+
+  return lines.join("\n").trim();
+}
+
+function buildAgentsGuide(config: ProjectConfig): string {
+  const sections = [
+    "# AI Agent Constitution",
+    "",
+    `This project was scaffolded as **${config.framework} (${config.options?.template || config.stack})**.`,
+    "",
+    "## Engineering Identity",
+    "",
+    "Act like:",
+    "- Senior Engineer",
+    "- Pragmatic Architect",
+    "- Fast Implementer",
+    "",
+    "Do not act like:",
+    "- Startup influencer",
+    "- Dribbble designer",
+    "- Framework collector",
+    "",
+    "## Guidance Order",
+    "",
+    "When working in this repository:",
+    "1. Follow `.cursorrules` for concise working behavior.",
+    "2. Follow this `AGENTS.md` for engineering policy and constraints.",
+    "3. Use `docs/instructions.md` for setup, verification, and extension workflow.",
+    "",
+    ...composeSharedConstitution(),
+    "",
+    "## Current Project Profile",
+    "",
+    ...composeProfileBlock(config.projectProfile),
+    "",
+    "## Stack-Specific Rules",
+    "",
+    ...composeConstitutionRules(config),
+    "",
+    "## Selected Project Choices",
+    "",
+    ...composeSelectedChoiceLines(config),
+  ];
+
+  return sections.join("\n").trim();
+}
+
+function buildInstructionsGuide(config: ProjectConfig): string {
+  const sections = [
+    "# Developer Setup & Playbook",
+    "",
+    `Project: **${config.projectName}**`,
+    `Stack: **${config.stack}**`,
+    `Profile: **${config.projectProfile}**`,
+    "",
+    "## Setup Commands",
+    "",
+    ...toBullets(composeSetupCommands(config)),
+    "",
+    "## Development / Execution",
+    "",
+    ...toBullets(composeRunCommands(config)),
+    "",
+    "## Verification",
+    "",
+    ...toBullets(composeVerificationCommands(config)),
+    "",
+    "## Project Inventory",
+    "",
+    ...toBullets(composeProjectInventory(config)),
+    "",
+    "## Change Protocol",
+    "",
+    ...toBullets(composeChangeProtocol(config)),
+  ];
+
+  const selectedChoices = composeSelectedChoiceLines(config);
+  if (selectedChoices.length > 0) {
+    sections.push("", "## Selected Scaffold Choices", "", ...toBullets(selectedChoices));
+  }
+
+  return sections.join("\n").trim();
+}
+
+function getCursorStackRule(config: ProjectConfig): string {
+  switch (config.appType) {
+    case "backend":
+      return "Backend rule: preserve route/controller/service boundaries and keep response shapes consistent.";
+    case "frontend":
+      return "Frontend rule: keep components focused, API logic outside UI components, and UI styling practical.";
+    case "ai-ml":
+      return "AI/ML rule: preserve explicit model contracts, validation, and reproducibility.";
+    case "dsa-specific":
+      return "DSA rule: prioritize correctness and simple solver-oriented code over abstraction.";
+  }
+}
+
+function toBullets(lines: string[]): string[] {
+  return lines.map((line) => `- ${line}`);
+}
+
+function mapLegacyStack(framework: string, template: string): string {
+  if (framework === "Node.js" && template === "Express API") {
+    return "node-ts-express";
+  }
+  if (framework === "Node.js" && template === "NestJS API") {
+    return "nestjs";
+  }
+  if (framework === "Python" && template === "FastAPI Service") {
+    return "python-fastapi";
+  }
+  return template.toLowerCase().replace(/\s+/g, "-");
+}
+
+function mapLegacyAppType(stack: string): ProjectConfig["appType"] {
+  if (stack.startsWith("react") || stack.startsWith("next")) {
+    return "frontend";
+  }
+  if (stack.startsWith("python-fastapi-serving") || stack === "r-analytics" || stack === "cpp-inference") {
+    return "ai-ml";
+  }
+  if (stack.startsWith("dsa-")) {
+    return "dsa-specific";
+  }
+  return "backend";
+}

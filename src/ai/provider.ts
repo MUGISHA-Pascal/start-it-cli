@@ -41,7 +41,7 @@ export class SmartAIProvider implements AIProvider {
         throw new Error(`AI API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
       return this.parseAIResponse(data.choices[0].message.content);
     } catch (error) {
       console.warn(
@@ -519,11 +519,7 @@ export interface Doctor extends BaseModel {
 
     switch (framework) {
       case "Node.js":
-        if (desc.includes("api") || desc.includes("backend"))
-          return "Express API";
-        if (desc.includes("fullstack") || desc.includes("ssr"))
-          return "Next.js";
-        return "TypeScript Project";
+        return "Express API";
 
       case "Go":
         if (desc.includes("api") || desc.includes("web")) return "Web API";
@@ -551,6 +547,10 @@ As an expert software architect and full-stack developer, analyze this project r
 
 Project Description: ${request.description}
 Preferred Framework: ${request.framework || "Auto-detect"}
+Architecture Style: ${request.architecture || "Auto-detect"}
+Primary Database: ${request.database || "None"}
+Preferred Frontend Stack: ${request.frontendStack || "None"}
+DevOps & CI/CD Tools: ${request.devops?.join(", ") || "None"}
 Key Features: ${request.features.join(", ")}
 Project Scale: ${request.scale}
 Deployment Target: ${request.deployment || "Not specified"}

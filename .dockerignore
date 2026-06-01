@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+dist
+coverage
+test-output
+*.tgz
+.codex
+.agents
+.kiro
+.vscode
+.idea
+.DS_Store

@@ -1,23 +1,47 @@
 # start-it
 
-A prompt-based CLI tool to scaffold projects for various frameworks and languages.
+`start-it` is a guided CLI for scaffolding opinionated project baselines across backend, frontend, AI/ML, and DSA workflows.
 
-## Features
+Instead of asking users to pick from a flat template list, the CLI now walks through:
 
-- Interactive prompt-based project setup
-- **AI-Powered project generation** with intelligent code generation
-- Traditional template-based scaffolding
-- Support for multiple frameworks:
-  - Go
-  - Flutter
-  - React Native
-  - Spring Boot
-  - Node.js
-  - Python
-- Beautiful CLI interface with colors and spinners
-- Fast project scaffolding
-- Context-aware code generation based on project description
-- Feature-based file creation (authentication, database, API, etc.)
+1. app type
+2. implemented stack
+3. stack-specific options
+4. project metadata
+5. deterministic scaffold generation
+
+## Current Coverage
+
+### Backend
+
+- `Node.js + TypeScript + Express`
+- `NestJS`
+- `Python + FastAPI`
+
+### Frontend
+
+- `React + Vite`
+- `Next.js`
+
+### AI / ML
+
+- `Python + FastAPI Serving`
+- `R Analytics Pipeline`
+- `C++ Inference Utility`
+
+### DSA-specific
+
+- `C++`
+- `Python`
+
+## What The CLI Collects
+
+The prompt flow is stack-aware.
+
+- Backend: databases, security preset, logging, monitoring, testing
+- Frontend: routing, styling, optional `shadcn/ui`, state, data fetching, testing
+- AI / ML: serving or runtime mode, packaging, tracking, validation, logging, testing
+- DSA-specific: track, runner style, verification mode
 
 ## Installation
 
@@ -25,7 +49,7 @@ A prompt-based CLI tool to scaffold projects for various frameworks and language
 npm install -g start-it-cli
 ```
 
-Or use with `npx`:
+Or run it without installing:
 
 ```bash
 npx start-it-cli
@@ -33,110 +57,78 @@ npx start-it-cli
 
 ## Usage
 
-Simply run the command:
-
 ```bash
 start-it-cli
 ```
 
-Then follow the interactive prompts to:
+The CLI then guides the project setup interactively.
 
-1. **Choose generation method**: Traditional (Template-based) or AI-Powered (Smart recommendations)
-2. **For Traditional**: Select your project type (Go, Flutter, React Native, Spring Boot, etc.)
-3. **For AI-Powered**: Describe your project in natural language
-4. Enter your project name
-5. Choose additional options based on your framework or AI recommendations
-6. Watch as your project is scaffolded automatically
+For the full command reference, flags, output-directory options, and non-interactive examples, see [USAGE.md](./docs/USAGE.md).
 
-### AI-Powered Generation
+## Example Flows
 
-The AI feature analyzes your project description and generates:
+### Backend Example
 
-- **Smart framework recommendations** based on your requirements
-- **Contextual code** tailored to your specific use case
-- **Feature-based architecture** (authentication, database, API routes, etc.)
-- **Production-ready file structure** with actual working code
-- **Domain-specific models** (e.g., Patient/Doctor models for hospital systems)
-
-Example AI workflow:
-
-```bash
-$ start-it-cli
-? Choose project generation method: AI-Powered (Smart recommendations)
-? Project name: hospital-management
-? Describe your project: A comprehensive hospital management system with patient records
-? Project scale: large
-? Select features you need: authentication, database, api, frontend, backend, testing
-
-AI Recommendations:
-Framework: Node.js
-Template: TypeScript Project
-Reasoning: Based on your requirements, I recommend Node.js with TypeScript for scalability
-
-Generated Files:
-- package.json: Complete with dependencies for auth, database, testing
-- src/index.ts: Express server with middleware setup
-- src/routes/index.ts: API endpoints for hospital operations
-- src/models/index.ts: Patient, Doctor, and User interfaces
+```text
+App type: Backend
+Stack: Node.js + TypeScript + Express
+Databases: PostgreSQL, Redis
+Security preset: bcrypt + JWT
+Logging: Pino
+Monitoring: Prometheus-ready
+Testing: Jest + Supertest
 ```
 
-## Example
+### Frontend Example
 
-```bash
-$ start-it-cli
-? What type of project would you like to create? (Use arrow keys)
-❯ Go
-  Flutter
-  React Native
-  Spring Boot
-  Node.js
-  Python
-
-? Project name: my-awesome-app
-? Select Go template: (Use arrow keys)
-❯ Basic CLI
-  Web API
-  Microservice
-
-Project created successfully!
+```text
+App type: Frontend
+Stack: React + Vite
+Routing: React Router
+Styling: Tailwind CSS
+UI add-on: shadcn/ui starter
+State: Zustand
+Data fetching: TanStack Query
+Testing: Vitest + React Testing Library
 ```
 
-## Supported Frameworks
+### AI / ML Example
 
-### Go
+```text
+App type: AI / ML
+Stack: Python + FastAPI Serving
+Serving mode: Realtime + batch endpoints
+Packaging: MLflow-ready
+Tracking: MLflow
+Validation: Pydantic + Pandera
+Testing: Pytest + HTTPX
+```
 
-- Basic CLI application
-- Web API (using Gin)
-- Microservice template
+### DSA Example
 
-### Flutter
+```text
+App type: DSA-specific
+Stack: Python
+Track: Interview preparation
+Runner style: Function-first
+Verification: Pytest
+```
 
-- Mobile app
-- Web app
-- Desktop app
+## Generated Project Shape
 
-### React Native
+Generation is deterministic and stack-specific.
 
-- Expo project
-- Bare React Native project
+- Backend projects generate service-ready API scaffolds
+- Frontend projects start from a provider-style baseline and are then customized
+- AI / ML projects generate serving, analytics, or inference workspaces
+- DSA projects generate practice workspaces with sample problems and runner/test setup
 
-### Spring Boot
+Each generated project also includes:
 
-- REST API
-- Web application
-- Microservice
-
-### Node.js
-
-- Express API
-- Next.js application
-- TypeScript project
-
-### Python
-
-- Django project
-- Flask application
-- FastAPI service
+- `.cursorrules`
+- `docs/AGENTS.md`
+- `docs/instructions.md`
+- stack-specific `README.md`
 
 ## Development
 
@@ -147,17 +139,45 @@ npm install
 npm run build
 ```
 
-### Development Mode
+### Run Locally
 
 ```bash
 npm run dev
 ```
 
-### Testing
+### Test
 
 ```bash
 npm test
 ```
+
+## Developer Docs
+
+- Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Local development: [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)
+- Architecture: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- CI / CD: [docs/CI_CD.md](./docs/CI_CD.md)
+
+## Project Structure
+
+```text
+src/
+├── cli.ts
+├── generator.ts
+├── workflow.ts
+├── types.ts
+├── templates/
+├── frontend/
+├── aiml/
+├── dsa/
+└── __tests__/
+```
+
+## Notes
+
+- Only implemented stacks are shown in the workflow
+- Some older static templates still exist in the repository, but the main CLI path is now app-type driven
+- Frontend generation prefers provider-style baselines when applicable, with deterministic post-processing afterward
 
 ## License
 

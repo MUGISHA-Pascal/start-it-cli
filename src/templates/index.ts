@@ -1,9 +1,11 @@
-import { TemplateConfig } from "../types";
+import { ProjectConfig, TemplateConfig } from "../types";
 import { goTemplates } from "./go";
 import { flutterTemplates } from "./flutter";
 import { reactNativeTemplates } from "./react-native";
 import { springBootTemplates } from "./spring-boot";
-import { nodeTemplates } from "./node";
+import { buildNodeTemplate } from "./node";
+import { buildNestTemplate } from "./nest";
+import { buildFastApiTemplate } from "./fastapi";
 import { pythonTemplates } from "./python";
 
 const allTemplates: Record<string, Record<string, TemplateConfig>> = {
@@ -11,27 +13,34 @@ const allTemplates: Record<string, Record<string, TemplateConfig>> = {
   Flutter: flutterTemplates,
   "React Native": reactNativeTemplates,
   "Spring Boot": springBootTemplates,
-  "Node.js": nodeTemplates,
   Python: pythonTemplates,
 };
 
-export function getTemplate(
-  framework: string,
-  templateName: string
-): TemplateConfig {
-  const frameworkTemplates = allTemplates[framework];
-
-  if (!frameworkTemplates) {
-    throw new Error(`Framework "${framework}" not found`);
+export function getTemplate(config: ProjectConfig): TemplateConfig {
+  if (config.stack === "node-ts-express") {
+    return buildNodeTemplate(config);
   }
 
-  const template = frameworkTemplates[templateName];
+  if (config.stack === "nestjs") {
+    return buildNestTemplate(config);
+  }
+
+  if (config.stack === "python-fastapi") {
+    return buildFastApiTemplate(config);
+  }
+
+  const frameworkTemplates = allTemplates[config.framework];
+
+  if (!frameworkTemplates) {
+    throw new Error(`Framework "${config.framework}" not found`);
+  }
+
+  const template = frameworkTemplates[config.options?.template || ""];
 
   if (!template) {
-    // Return first available template as default
     const firstTemplate = Object.values(frameworkTemplates)[0];
     if (!firstTemplate) {
-      throw new Error(`No templates available for "${framework}"`);
+      throw new Error(`No templates available for "${config.framework}"`);
     }
     return firstTemplate;
   }

@@ -6,6 +6,8 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import chalk from "chalk";
 import ora from "ora";
+import { composeAgentIgnore } from "../agent/composer";
+import { buildLegacyAiGuidance } from "../utils/agentRules";
 
 export class AIProjectGenerator {
   private aiProvider: SmartAIProvider;
@@ -40,6 +42,39 @@ export class AIProjectGenerator {
           await fs.chmod(filePath, 0o755);
         }
       }
+
+      // Add agentic AI guidelines for token efficiency
+      const guidance = buildLegacyAiGuidance(
+        recommendation.framework,
+        recommendation.template
+      );
+      await fs.writeFile(path.join(projectDir, ".cursorrules"), guidance.cursorRules);
+      await fs.writeFile(
+        path.join(projectDir, ".agentignore"),
+        composeAgentIgnore({
+          appType: "backend",
+          framework: recommendation.framework,
+          stack: recommendation.framework === "Node.js" ? "node-ts-express" : recommendation.template,
+          projectProfile: "startup",
+          projectName: request.projectName,
+          projectPath: request.projectPath,
+          options: {
+            template: recommendation.template,
+          },
+        })
+      );
+
+      // Create docs directory and write default instruction files
+      const docsDir = path.join(projectDir, "docs");
+      await fs.ensureDir(docsDir);
+      await fs.writeFile(
+        path.join(docsDir, "AGENTS.md"),
+        guidance.agents
+      );
+      await fs.writeFile(
+        path.join(docsDir, "instructions.md"),
+        guidance.instructions
+      );
 
       spinner.succeed("Project created successfully!");
 
@@ -89,10 +124,17 @@ export class AIProjectGenerator {
     const recommendation = await this.aiProvider.generateProject(request);
 
     // Get the actual template
-    const template = getTemplate(
-      recommendation.framework,
-      recommendation.template
-    );
+    const template = getTemplate({
+      appType: "backend",
+      framework: recommendation.framework,
+      stack: recommendation.framework === "Node.js" ? "node-ts-express" : recommendation.template,
+      projectProfile: "startup",
+      projectName: "generated-project",
+      projectPath: process.cwd(),
+      options: {
+        template: recommendation.template,
+      },
+    });
 
     // Get smart dependencies
     const dependencies = await this.aiProvider.suggestDependencies(

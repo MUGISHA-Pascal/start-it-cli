@@ -1,7 +1,7 @@
 {
   "name": "start-it-cli",
   "version": "1.0.1",
-  "description": "A prompt-based CLI tool to scaffold projects for Go, Flutter, React Native, Spring Boot, and more",
+  "description": "A guided CLI for scaffolding backend, frontend, AI/ML, and DSA project baselines",
   "main": "dist/index.js",
   "bin": {
     "start-it-cli": "dist/cli.js"
@@ -17,12 +17,20 @@
     "cli",
     "scaffold",
     "project-generator",
-    "go",
-    "flutter",
-    "react-native",
-    "spring-boot"
+    "backend",
+    "frontend",
+    "ai-ml",
+    "dsa",
+    "express",
+    "nestjs",
+    "fastapi",
+    "nextjs",
+    "vite"
   ],
-  "author": "",
+  "author": "Mugisha Pascal",
+  "contributors": [
+    "Mugisha Prosper"
+  ],
   "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.2",

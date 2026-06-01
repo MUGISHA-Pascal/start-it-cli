@@ -1,183 +1,120 @@
 # Contributing to start-it
 
-Thank you for your interest in contributing to start-it! This guide will help you get started.
+This repository now uses an app-type-driven generation workflow. Contributions should fit that architecture rather than only adding flat static templates.
 
-## Getting Started
-
-### Prerequisites
+## Prerequisites
 
 - Node.js 14+
 - npm 6+
-- TypeScript knowledge
+- TypeScript
 
-### Setup
-
-1. Clone the repository:
-
-```bash
-git clone <repository-url>
-cd start-it
-```
-
-2. Install dependencies:
+## Local Setup
 
 ```bash
 npm install
-```
-
-3. Build the project:
-
-```bash
 npm run build
+npm test
 ```
 
-4. Run in development mode:
+Run the CLI locally with:
 
 ```bash
 npm run dev
 ```
 
-## Development Workflow
+Related developer docs:
 
-### Building
+- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- [docs/CI_CD.md](./docs/CI_CD.md)
 
-```bash
-npm run build
+## Current Generator Architecture
+
+The main flow is:
+
+1. `src/cli.ts`
+2. `src/workflow.ts`
+3. `src/generator.ts`
+4. stack-specific scaffold or template builder
+
+There are currently multiple generation paths:
+
+- `src/templates/`
+  - deterministic backend/template builders and older static templates
+- `src/frontend/`
+  - frontend provider-baseline plus customization flow
+- `src/aiml/`
+  - AI/ML deterministic scaffolds
+- `src/dsa/`
+  - DSA-specific deterministic scaffolds
+
+## When Adding A New Stack
+
+1. Add the stack to the appropriate app type in [src/workflow.ts](/home/polo/Documents/Start%20It%20-%20CLI/src/workflow.ts:1).
+2. Extend the relevant types in [src/types.ts](/home/polo/Documents/Start%20It%20-%20CLI/src/types.ts:1).
+3. Add stack-aware prompt handling in [src/cli.ts](/home/polo/Documents/Start%20It%20-%20CLI/src/cli.ts:1).
+4. Route generation in [src/generator.ts](/home/polo/Documents/Start%20It%20-%20CLI/src/generator.ts:1) if the stack needs its own scaffold path.
+5. Implement the scaffold or builder in the correct module:
+   - backend template builders in `src/templates/`
+   - frontend in `src/frontend/`
+   - AI/ML in `src/aiml/`
+   - DSA in `src/dsa/`
+6. Add generator coverage in [src/__tests__/generator.test.ts](/home/polo/Documents/Start%20It%20-%20CLI/src/__tests__/generator.test.ts:1).
+7. Update the docs in `README.md` and `QUICK_START.md`.
+
+## When Updating Existing Stacks
+
+- Keep generation deterministic
+- Prefer typed config changes over loosely adding raw option fields
+- Keep prompts constrained to guided choices where possible
+- Preserve stack-specific next-step instructions
+
+## Project Structure
+
+```text
+src/
+├── __tests__/
+├── aiml/
+├── dsa/
+├── frontend/
+├── templates/
+├── cli.ts
+├── generator.ts
+├── types.ts
+└── workflow.ts
 ```
 
-This compiles TypeScript to JavaScript in the `dist/` directory.
+## Testing Expectations
 
-### Testing
-
-```bash
-npm test
-```
-
-Run the test suite to ensure everything works correctly.
-
-### Adding a New Framework Template
-
-To add a new framework template:
-
-1. Create a new file in `src/templates/` (e.g., `src/templates/rust.ts`)
-
-2. Define your template following this structure:
-
-```typescript
-import { TemplateConfig } from "../types";
-
-export const rustTemplates: Record<string, TemplateConfig> = {
-  "Template Name": {
-    name: "Template Name",
-    description: "Description of the template",
-    files: [
-      {
-        path: "file/path.txt",
-        content: "File content here",
-        isExecutable: false, // optional
-      },
-      // ... more files
-    ],
-  },
-};
-```
-
-3. Export your templates in `src/templates/index.ts`:
-
-```typescript
-import { rustTemplates } from "./rust";
-
-const allTemplates: Record<string, Record<string, TemplateConfig>> = {
-  // ... existing frameworks
-  Rust: rustTemplates,
-};
-```
-
-4. Update the CLI in `src/cli.ts` to include your framework in the FRAMEWORKS array and add framework-specific options if needed.
-
-5. Add tests in `src/__tests__/generator.test.ts` for your new templates.
-
-6. Update `README.md` and `EXAMPLES.md` with documentation.
-
-### File Structure
-
-```
-start-it/
-├── src/
-│   ├── cli.ts                 # CLI entry point
-│   ├── generator.ts           # Project generator logic
-│   ├── types.ts               # TypeScript type definitions
-│   ├── templates/             # Framework templates
-│   │   ├── index.ts           # Template registry
-│   │   ├── go.ts
-│   │   ├── flutter.ts
-│   │   ├── react-native.ts
-│   │   ├── spring-boot.ts
-│   │   ├── node.ts
-│   │   └── python.ts
-│   └── __tests__/
-│       └── generator.test.ts   # Tests
-├── dist/                      # Compiled JavaScript (generated)
-├── package.json
-├── tsconfig.json
-├── jest.config.js
-├── README.md
-├── EXAMPLES.md
-└── CONTRIBUTING.md
-```
+- Add or update tests for every new generation path
+- Ensure `npm test` passes
+- Ensure `npm run build` passes
 
 ## Code Style
 
-- Use TypeScript for all source files
-- Follow existing code patterns and conventions
-- Use meaningful variable and function names
-- Add comments for complex logic
-
-## Testing
-
-- Write tests for new features
-- Ensure all tests pass before submitting a PR
-- Aim for good test coverage
-
-```bash
-npm test
-```
+- Follow existing TypeScript conventions
+- Keep changes typed and explicit
+- Prefer clear, deterministic file generation over opaque magic
+- Update user-facing docs when behavior changes
 
 ## Submitting Changes
 
-1. Create a new branch for your feature:
-
-```bash
-git checkout -b feature/your-feature-name
-```
-
-2. Make your changes and commit:
-
-```bash
-git commit -am 'Add your feature description'
-```
-
-3. Push to your fork:
-
-```bash
-git push origin feature/your-feature-name
-```
-
-4. Submit a pull request with a clear description of your changes
+1. Create a branch
+2. Make the change
+3. Run `npm test`
+4. Run `npm run build`
+5. Open a pull request with a focused description
 
 ## Reporting Issues
 
-If you find a bug or have a suggestion, please open an issue on GitHub with:
+Include:
 
-- A clear description
-- Steps to reproduce (for bugs)
-- Expected vs actual behavior
-- Your environment (Node version, OS, etc.)
+- the selected app type and stack
+- the prompt choices used
+- expected behavior
+- actual behavior
+- Node version and OS
 
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
-
-## Questions?
-
-Feel free to open an issue or discussion if you have any questions!

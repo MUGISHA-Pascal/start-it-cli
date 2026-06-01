@@ -4,6 +4,11 @@ import chalk from "chalk";
 import ora from "ora";
 import { ProjectConfig } from "./types";
 import { getTemplate } from "./templates";
+import { scaffoldFrontendProject } from "./frontend/scaffold";
+import { scaffoldAiMlProject } from "./aiml/scaffold";
+import { scaffoldDsaProject } from "./dsa/scaffold";
+import { composeAgentIgnore } from "./agent/composer";
+import { buildAiGuidance } from "./utils/agentRules";
 
 export class ProjectGenerator {
   private config: ProjectConfig;
@@ -29,22 +34,42 @@ export class ProjectGenerator {
       // Create project directory
       await fs.ensureDir(projectPath);
 
-      // Get template for the framework
-      const template = getTemplate(
-        this.config.framework,
-        this.config.options?.template || ""
-      );
+      if (this.config.appType === "frontend") {
+        await scaffoldFrontendProject(this.config, projectPath);
+      } else if (this.config.appType === "ai-ml") {
+        await scaffoldAiMlProject(this.config, projectPath);
+      } else if (this.config.appType === "dsa-specific") {
+        await scaffoldDsaProject(this.config, projectPath);
+      } else {
+        const template = getTemplate(this.config);
 
-      // Create all files from template
-      for (const file of template.files) {
-        const filePath = path.join(projectPath, file.path);
-        await fs.ensureDir(path.dirname(filePath));
-        await fs.writeFile(filePath, file.content);
+        for (const file of template.files) {
+          const filePath = path.join(projectPath, file.path);
+          await fs.ensureDir(path.dirname(filePath));
+          await fs.writeFile(filePath, file.content);
 
-        if (file.isExecutable) {
-          await fs.chmod(filePath, 0o755);
+          if (file.isExecutable) {
+            await fs.chmod(filePath, 0o755);
+          }
         }
       }
+
+      // Add agentic AI guidelines for token efficiency
+      const guidance = buildAiGuidance(this.config);
+      await fs.writeFile(path.join(projectPath, ".cursorrules"), guidance.cursorRules);
+      await fs.writeFile(path.join(projectPath, ".agentignore"), composeAgentIgnore(this.config));
+
+      // Create docs directory and write default instruction files
+      const docsDir = path.join(projectPath, "docs");
+      await fs.ensureDir(docsDir);
+      await fs.writeFile(
+        path.join(docsDir, "AGENTS.md"),
+        guidance.agents
+      );
+      await fs.writeFile(
+        path.join(docsDir, "instructions.md"),
+        guidance.instructions
+      );
 
       spinner.succeed("Project structure created");
     } catch (error) {

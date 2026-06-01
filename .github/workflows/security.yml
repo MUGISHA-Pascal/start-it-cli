@@ -1,0 +1,182 @@
+name: Security
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-review:
+    if: github.event_name == 'pull_request' && vars.ENABLE_DEPENDENCY_REVIEW == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies (with temporary lodash exception)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm audit --omit=dev --json > audit-prod.json || true
+
+          node - <<'NODE'
+          const fs = require("fs");
+
+          const report = JSON.parse(fs.readFileSync("audit-prod.json", "utf8"));
+          const vulnerabilities = report.vulnerabilities || {};
+          const ignoreAdvisories = new Set([
+            "GHSA-xxjr-mmjv-4gpg",
+            "GHSA-r5fr-rjxr-66jc",
+            "GHSA-f23m-r3pf-42rh",
+          ]);
+
+          const failing = [];
+
+          for (const [pkg, details] of Object.entries(vulnerabilities)) {
+            const via = Array.isArray(details.via) ? details.via : [];
+            const nonIgnoredVia = via.filter((entry) => {
+              if (typeof entry === "string") {
+                return true;
+              }
+              const sev = (entry.severity || "").toLowerCase();
+              if (sev !== "high" && sev !== "critical") {
+                return false;
+              }
+              const url = entry.url || "";
+              const ghsa = url.split("/").pop() || "";
+              return !ignoreAdvisories.has(ghsa);
+            });
+
+            if (nonIgnoredVia.length > 0) {
+              failing.push({ pkg, severity: details.severity, via: nonIgnoredVia });
+            }
+          }
+
+          if (failing.length > 0) {
+            console.error("High/Critical vulnerabilities found (excluding temporary lodash exception):");
+            for (const item of failing) {
+              console.error(`- ${item.pkg} (${item.severity})`);
+            }
+            process.exit(1);
+          }
+
+          console.log("No blocking high/critical production vulnerabilities found.");
+          NODE
+
+      - name: Audit full dependency tree (informational)
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm audit --json > audit-full.json || true
+
+          node - <<'NODE'
+          const fs = require("fs");
+
+          const report = JSON.parse(fs.readFileSync("audit-full.json", "utf8"));
+          const vulnerabilities = report.vulnerabilities || {};
+          const ignoreAdvisories = new Set([
+            "GHSA-xxjr-mmjv-4gpg",
+            "GHSA-r5fr-rjxr-66jc",
+            "GHSA-f23m-r3pf-42rh",
+          ]);
+
+          const failing = [];
+
+          for (const [pkg, details] of Object.entries(vulnerabilities)) {
+            const via = Array.isArray(details.via) ? details.via : [];
+            const nonIgnoredVia = via.filter((entry) => {
+              if (typeof entry === "string") {
+                return true;
+              }
+              const sev = (entry.severity || "").toLowerCase();
+              if (sev !== "high" && sev !== "critical") {
+                return false;
+              }
+              const url = entry.url || "";
+              const ghsa = url.split("/").pop() || "";
+              return !ignoreAdvisories.has(ghsa);
+            });
+
+            if (nonIgnoredVia.length > 0) {
+              failing.push({ pkg, severity: details.severity, via: nonIgnoredVia });
+            }
+          }
+
+          if (failing.length > 0) {
+            console.error("High/Critical vulnerabilities found in full tree (excluding temporary lodash exception):");
+            for (const item of failing) {
+              console.error(`- ${item.pkg} (${item.severity})`);
+            }
+            process.exit(1);
+          }
+
+          console.log("No blocking high/critical vulnerabilities found in full tree.");
+          NODE
+
+  codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  trivy-filesystem:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@v0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-fs.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif

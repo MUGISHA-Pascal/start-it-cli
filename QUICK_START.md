@@ -1,113 +1,149 @@
 # Quick Start Guide
 
-Get up and running with start-it-cli in 2 minutes!
+Get a project scaffolded with the current guided workflow in a few minutes.
 
-## Installation
+## Install
 
 ```bash
 npm install -g start-it-cli
 ```
 
-## Create Your First Project
+Or run directly:
+
+```bash
+npx start-it-cli
+```
+
+## Create A Project
 
 ```bash
 start-it-cli
 ```
 
-Then answer the prompts:
+The CLI will ask for:
 
-1. **Select Framework** - Choose from Go, Flutter, React Native, Spring Boot, Node.js, or Python
-2. **Project Name** - Enter your project name (e.g., `my-app`)
-3. **Select Template** - Choose a template variant for your framework
+1. app type
+2. implemented stack
+3. stack-specific options
+4. project name
+5. project profile and domain
 
-That's it! Your project is ready.
+## Supported App Types
 
-## Next Steps
+### Backend
 
-Navigate to your project and follow the README:
+- `Node.js + TypeScript + Express`
+- `NestJS`
+- `Python + FastAPI`
+
+### Frontend
+
+- `React + Vite`
+- `Next.js`
+
+### AI / ML
+
+- `Python + FastAPI Serving`
+- `R Analytics Pipeline`
+- `C++ Inference Utility`
+
+### DSA-specific
+
+- `C++`
+- `Python`
+
+## Typical Next Steps
+
+After generation:
 
 ```bash
 cd my-app
 cat README.md
 ```
 
-## Common Commands by Framework
-
-### Go
+### Node.js + Express / NestJS
 
 ```bash
-cd my-go-app
-go mod download
-go run main.go
-```
-
-### Flutter
-
-```bash
-cd my-flutter-app
-flutter pub get
-flutter run
-```
-
-### React Native (Expo)
-
-```bash
-cd my-rn-app
 npm install
-npm start
 ```
 
-### Spring Boot
+### Python + FastAPI
 
 ```bash
-cd my-spring-app
-mvn clean package
-mvn spring-boot:run
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### Node.js (Express)
+### React + Vite / Next.js
 
 ```bash
-cd my-node-app
 npm install
 npm run dev
 ```
 
-### Python (FastAPI)
+### Python + FastAPI Serving
 
 ```bash
-cd my-python-app
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-python main.py
 ```
 
-## Frameworks & Templates
+### R Analytics Pipeline
 
-| Framework        | Templates                        |
-| ---------------- | -------------------------------- |
-| **Go**           | Basic CLI, Web API, Microservice |
-| **Flutter**      | Mobile App, Web App, Desktop App |
-| **React Native** | Expo, Bare React Native          |
-| **Spring Boot**  | REST API, Web App, Microservice  |
-| **Node.js**      | Express API, Next.js, TypeScript |
-| **Python**       | Django, Flask, FastAPI           |
+```bash
+Rscript scripts/run_pipeline.R
+```
 
-## Need Help?
+### C++ Inference Utility / DSA C++
 
-- **Installation Issues?** → See [INSTALLATION.md](./INSTALLATION.md)
-- **More Examples?** → See [EXAMPLES.md](./EXAMPLES.md)
-- **Want to Contribute?** → See [CONTRIBUTING.md](./CONTRIBUTING.md)
-- **Full Details?** → See [README.md](./README.md)
+```bash
+cmake -S . -B build
+cmake --build build
+```
 
-## Tips
+### DSA Python
 
-- Project names can only contain letters, numbers, hyphens, and underscores
-- Each template includes a README with framework-specific instructions
-- All projects are ready to build and deploy
-- Templates include example code and best practices
+```bash
+python main.py < examples/sample_input.txt
+```
 
----
+## Example Prompt Paths
 
-**Happy coding!**
+### Backend
+
+```text
+Backend -> Node.js + TypeScript + Express -> databases/security/logging/testing
+```
+
+### Frontend
+
+```text
+Frontend -> React + Vite -> routing/styling/state/testing
+```
+
+### AI / ML
+
+```text
+AI / ML -> Python + FastAPI Serving -> serving/tracking/validation/testing
+```
+
+### DSA
+
+```text
+DSA-specific -> C++ or Python -> track/input mode/verification
+```
+
+## Development
+
+```bash
+npm install
+npm run build
+npm test
+```
+
+## More Detail
+
+- Main overview: [README.md](./README.md)
+- Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
