@@ -58,7 +58,7 @@ jobs:
 
       - name: Trivy image scan
         if: github.event_name == 'pull_request'
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.24.0
         with:
           image-ref: start-it-cli:pr
           format: sarif
