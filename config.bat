@@ -23,9 +23,14 @@ git config --local --replace-all user.email "%USER_EMAIL%"
 git config --local credential.helper ""
 git add .
 git commit --amend -m "%LAST_COMMIT_TEXT%" --no-verify
+set AMEND_RESULT=%errorlevel%
 date %CURRENT_DATE%
 time %CURRENT_TIME%
 echo Date restored to %CURRENT_DATE% %CURRENT_TIME% and complete amend last commit!
+if not "%AMEND_RESULT%"=="0" (
+  echo AMEND_FAILED rc=%AMEND_RESULT%
+  exit /b 1
+)
 git -c credential.helper="" push -uf origin %CURRENT_BRANCH% --no-verify
 set PUSH_RESULT=%errorlevel%
 @echo on
